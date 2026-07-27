@@ -23,13 +23,17 @@ pub fn run(force: bool) -> Result<()> {
         ));
     }
 
-    let sdk_root = default_sdk_root()
-        .ok_or_else(|| Error::Message("cannot determine the local application data directory".into()))?;
+    let sdk_root = default_sdk_root().ok_or_else(|| {
+        Error::Message("cannot determine the local application data directory".into())
+    })?;
     let sdcc_root = sdk_root.join("sdcc");
     let sdcc_exe = executable(&sdcc_root.join("bin"), "sdcc");
 
     if sdcc_exe.is_file() && !force {
-        println!("SDK {SDK_VERSION} is already installed at {}", sdk_root.display());
+        println!(
+            "SDK {SDK_VERSION} is already installed at {}",
+            sdk_root.display()
+        );
         println!("Use --force to reinstall it.");
         return Ok(());
     }
@@ -82,12 +86,10 @@ fn download(url: &str, destination: &Path) -> Result<String> {
     let mut buffer = [0_u8; 64 * 1024];
 
     loop {
-        let count = response
-            .read(&mut buffer)
-            .map_err(|source| Error::Read {
-                path: destination.to_owned(),
-                source,
-            })?;
+        let count = response.read(&mut buffer).map_err(|source| Error::Read {
+            path: destination.to_owned(),
+            source,
+        })?;
         if count == 0 {
             break;
         }
