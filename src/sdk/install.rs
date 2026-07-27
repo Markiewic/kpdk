@@ -60,9 +60,19 @@ pub fn run(force: bool) -> Result<()> {
     let _ = fs::remove_file(&installer);
 
     if !sdcc_exe.is_file() {
+        let candidates = find_sdcc_candidates(&sdk_root);
         return Err(Error::Message(format!(
-            "SDCC installer completed but `{}` was not created",
-            sdcc_exe.display()
+            "SDCC installer completed but `{}` was not created; candidates: {}",
+            sdcc_exe.display(),
+            if candidates.is_empty() {
+                "none".to_owned()
+            } else {
+                candidates
+                    .iter()
+                    .map(|path| path.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            }
         )));
     }
 
@@ -71,6 +81,42 @@ pub fn run(force: bool) -> Result<()> {
     println!("Installed kpdk SDK {SDK_VERSION} at {}", sdk_root.display());
     println!("Note: free-pdk includes and easypdkprog are not installed by this preview yet.");
     Ok(())
+}
+
+fn find_sdcc_candidates(sdk_root: &Path) -> Vec<PathBuf> {
+    let mut roots = vec![sdk_root.to_owned()];
+    for variable in ["ProgramFiles", "ProgramFiles(x86)", "LOCALAPPDATA"] {
+        if let Some(root) = std::env::var_os(variable) {
+            roots.push(PathBuf::from(root).join("SDCC"));
+        }
+    }
+
+    let mut candidates = Vec::new();
+    for root in roots {
+        visit_for_sdcc(&root, 0, &mut candidates);
+    }
+    candidates
+}
+
+fn visit_for_sdcc(directory: &Path, depth: u8, candidates: &mut Vec<PathBuf>) {
+    if depth > 3 || !directory.is_dir() {
+        return;
+    }
+    let Ok(entries) = fs::read_dir(directory) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_file()
+            && path
+                .file_name()
+                .is_some_and(|name| name.eq_ignore_ascii_case("sdcc.exe"))
+        {
+            candidates.push(path);
+        } else if path.is_dir() {
+            visit_for_sdcc(&path, depth + 1, candidates);
+        }
+    }
 }
 
 fn download(url: &str, destination: &Path) -> Result<String> {
