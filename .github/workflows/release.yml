@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive: kpdk-windows-x64.zip
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive: kpdk-linux-x64.tar.gz
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive: kpdk-macos-x64.tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }}
+      - name: Package Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive "target/${{ matrix.target }}/release/kpdk.exe" "${{ matrix.archive }}"
+      - name: Package Unix
+        if: runner.os != 'Windows'
+        run: tar -czf "${{ matrix.archive }}" -C "target/${{ matrix.target }}/release" kpdk
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.archive }}
