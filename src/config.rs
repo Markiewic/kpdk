@@ -54,4 +54,3 @@ impl ProjectFile {
         toml::from_str(&input).map_err(|source| Error::Config { path, source })
     }
 }
-
