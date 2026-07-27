@@ -36,4 +36,3 @@ fn executable(directory: &Path, name: &str) -> String {
         .to_string_lossy()
         .into_owned()
 }
-
