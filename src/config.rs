@@ -51,6 +51,9 @@ impl ProjectFile {
             path: path.clone(),
             source,
         })?;
-        toml::from_str(&input).map_err(|source| Error::Config { path, source })
+        toml::from_str(&input).map_err(|source| Error::Config {
+            path,
+            source: Box::new(source),
+        })
     }
 }
