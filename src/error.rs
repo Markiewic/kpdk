@@ -23,6 +23,8 @@ pub enum Error {
     ToolMissing(String),
     #[error("`{program}` exited with status {status}")]
     Process { program: String, status: i32 },
+    #[error("network request failed: {0}")]
+    Network(#[from] reqwest::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
