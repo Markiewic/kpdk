@@ -19,7 +19,7 @@ pub fn run() -> Result<()> {
     }
     match tools.include {
         Some(path) if path.join("pdk/device.h").is_file() => {
-            println!("{:<16} {}", "pdk-includes", "OK")
+            println!("{:<16} OK", "pdk-includes")
         }
         Some(path) => {
             println!("{:<16} MISSING ({})", "pdk-includes", path.display());
