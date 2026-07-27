@@ -17,7 +17,7 @@ pub enum Error {
     #[error("invalid project configuration in {path}: {source}")]
     Config {
         path: PathBuf,
-        source: toml::de::Error,
+        source: Box<toml::de::Error>,
     },
     #[error("required tool `{0}` was not found; run `kpdk doctor`")]
     ToolMissing(String),
