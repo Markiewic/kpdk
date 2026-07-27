@@ -69,11 +69,7 @@ fn run() -> Result<()> {
         Command::Clean { project } => clean::run(&project),
         Command::Doctor => doctor::run(),
         Command::Probe => probe::run(),
-        Command::Flash {
-            project,
-            port,
-            yes,
-        } => flash::run(&project, port.as_deref(), yes),
+        Command::Flash { project, port, yes } => flash::run(&project, port.as_deref(), yes),
     }
 }
 
@@ -83,4 +79,3 @@ fn main() {
         std::process::exit(1);
     }
 }
-
