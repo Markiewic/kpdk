@@ -3,6 +3,7 @@ mod config;
 mod device;
 mod error;
 mod process;
+mod sdk;
 mod toolchain;
 
 use clap::{Parser, Subcommand};
@@ -10,6 +11,7 @@ use std::path::PathBuf;
 
 use crate::commands::{build, clean, doctor, flash, new, probe};
 use crate::error::Result;
+use crate::sdk::install;
 
 #[derive(Parser)]
 #[command(name = "kpdk", version, about = "A friendly frontend for free-pdk")]
@@ -20,6 +22,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Install and manage the kpdk SDK.
+    Sdk {
+        #[command(subcommand)]
+        command: SdkCommand,
+    },
     /// Create a new Padauk firmware project.
     New {
         name: String,
@@ -57,8 +64,20 @@ enum Command {
     },
 }
 
+#[derive(Subcommand)]
+enum SdkCommand {
+    /// Install the pinned Windows SDCC toolchain.
+    Install {
+        #[arg(long)]
+        force: bool,
+    },
+}
+
 fn run() -> Result<()> {
     match Cli::parse().command {
+        Command::Sdk {
+            command: SdkCommand::Install { force },
+        } => install::run(force),
         Command::New {
             name,
             device,
