@@ -19,11 +19,11 @@ impl Architecture {
 
 pub fn architecture(device: &str) -> Result<Architecture> {
     match device.to_ascii_uppercase().as_str() {
-        "PMS150C" | "PMS150G" | "PMS15A" | "PMS15B" => Ok(Architecture::Pdk13),
-        "PFS154" | "PFS172" | "PFS173" | "PMS152" | "PMS154B" | "PMS154C"
-        | "PMS171B" => Ok(Architecture::Pdk14),
-        "PFC151" | "PFC154" | "PFC161" | "PFS121" | "PFS122" | "PFS123"
-        | "PMS131" => Ok(Architecture::Pdk15),
+        "PMS150C" | "PMS15A" => Ok(Architecture::Pdk13),
+        "PFS154" | "PFS172" | "PMS152" | "PMS154C" | "PMS171B" => {
+            Ok(Architecture::Pdk14)
+        }
+        "PFS173" => Ok(Architecture::Pdk15),
         other => Err(Error::Message(format!(
             "unsupported device `{other}`; the initial device table must be extended before building it"
         ))),
@@ -48,4 +48,3 @@ mod tests {
         assert_eq!(architecture("pms150c").unwrap(), Architecture::Pdk13);
     }
 }
-
