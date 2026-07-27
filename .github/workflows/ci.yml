@@ -18,4 +18,6 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
-
+      - name: Test SDCC SDK installation
+        if: runner.os == 'Windows'
+        run: cargo run -- sdk install
