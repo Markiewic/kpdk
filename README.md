@@ -12,12 +12,17 @@ checks the host toolchain, and integrates with Easy PDK Programmer.
 ## Quick start
 
 ```powershell
+kpdk sdk install
 kpdk new blink --device PFS154
 cd blink
 kpdk doctor
 kpdk build --release
 kpdk flash
 ```
+
+`kpdk sdk install` currently installs the official relocatable SDCC 4.6.0
+distribution on Windows x64. The preview does not yet install `pdk-includes`,
+`easy-pdk-includes`, or `easypdkprog`.
 
 ## Toolchain discovery
 
@@ -31,9 +36,13 @@ The directory layout is:
 
 ```text
 toolchains/2026.1/
+├── sdcc/
+│   ├── bin/
+│   │   ├── sdcc.exe
+│   │   └── makebin.exe
+│   ├── include/
+│   └── lib/
 ├── bin/
-│   ├── sdcc.exe
-│   ├── makebin.exe
 │   └── easypdkprog.exe
 └── include/
     ├── pdk/
@@ -75,4 +84,3 @@ cargo test
 - Linux and macOS SDK bundles
 - Complete, generated device database
 - VS Code configuration and examples
-
