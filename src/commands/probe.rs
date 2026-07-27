@@ -5,4 +5,3 @@ use crate::toolchain::Toolchain;
 pub fn run() -> Result<()> {
     process::run(&Toolchain::discover().easypdkprog, ["probe"])
 }
-
