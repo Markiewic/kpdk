@@ -29,10 +29,7 @@ pub fn run(root: &Path, port: Option<&str>, yes: bool) -> Result<()> {
 
     let artifacts = build::run(root, true)?;
     let toolchain = Toolchain::discover();
-    let mut args = vec![
-        "-n".to_owned(),
-        config.project.device.to_ascii_uppercase(),
-    ];
+    let mut args = vec!["-n".to_owned(), config.project.device.to_ascii_uppercase()];
     let configured_port = port
         .map(str::to_owned)
         .or_else(|| config.programmer.port.filter(|value| value != "auto"));
@@ -45,4 +42,3 @@ pub fn run(root: &Path, port: Option<&str>, yes: bool) -> Result<()> {
     ]);
     process::run(&toolchain.easypdkprog, args)
 }
-
