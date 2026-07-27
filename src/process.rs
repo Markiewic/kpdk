@@ -36,4 +36,3 @@ pub fn version(program: &str, arg: &str) -> bool {
         .map(|output| output.status.success())
         .unwrap_or(false)
 }
-
