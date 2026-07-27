@@ -14,4 +14,3 @@ pub fn run(root: &Path) -> Result<()> {
     }
     Ok(())
 }
-
