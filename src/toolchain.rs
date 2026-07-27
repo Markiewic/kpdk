@@ -10,11 +10,16 @@ pub struct Toolchain {
 
 impl Toolchain {
     pub fn discover() -> Self {
-        if let Some(root) = env::var_os("KPDK_SDK_DIR").map(PathBuf::from) {
+        if let Some(root) = env::var_os("KPDK_SDK_DIR")
+            .map(PathBuf::from)
+            .or_else(default_sdk_root)
+            .filter(|root| root.is_dir())
+        {
             let bin = root.join("bin");
+            let sdcc_bin = root.join("sdcc").join("bin");
             return Self {
-                sdcc: executable(&bin, "sdcc"),
-                makebin: executable(&bin, "makebin"),
+                sdcc: executable(&sdcc_bin, "sdcc"),
+                makebin: executable(&sdcc_bin, "makebin"),
                 easypdkprog: executable(&bin, "easypdkprog"),
                 include: Some(root.join("include")),
             };
@@ -27,6 +32,10 @@ impl Toolchain {
             include: env::var_os("KPDK_INCLUDE_DIR").map(PathBuf::from),
         }
     }
+}
+
+pub fn default_sdk_root() -> Option<PathBuf> {
+    dirs::data_local_dir().map(|root| root.join("kpdk").join("toolchains").join("2026.1"))
 }
 
 fn executable(directory: &Path, name: &str) -> String {
