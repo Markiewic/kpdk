@@ -18,6 +18,9 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             archive: kpdk-linux-x64.tar.gz
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            archive: kpdk-linux-arm64.tar.gz
           - os: macos-latest
             target: x86_64-apple-darwin
             archive: kpdk-macos-x64.tar.gz
