@@ -8,7 +8,7 @@ jobs:
   test:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest, ubuntu-24.04-arm, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -19,5 +19,5 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - name: Test SDCC SDK installation
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' || runner.os == 'Linux'
         run: cargo run -- sdk install
