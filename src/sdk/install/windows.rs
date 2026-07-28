@@ -9,16 +9,14 @@ use super::{download_checked, executable, require_sdcc};
 
 const SDCC_URL: &str =
     "https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.6.0/sdcc-4.6.0-x64-setup.exe/download";
-const SDCC_SHA256: &str =
-    "0a165e155a052fcf7c29ea703ee77d5a8eb578eba58279e79e885618dc4b2e1a";
+const SDCC_SHA256: &str = "0a165e155a052fcf7c29ea703ee77d5a8eb578eba58279e79e885618dc4b2e1a";
 
 const SEVEN_ZIP_VERSION: &str = "26.02";
 const SEVEN_ZIP_BOOTSTRAP_URL: &str = "https://www.7-zip.org/a/7zr.exe";
 const SEVEN_ZIP_BOOTSTRAP_SHA256: &str =
     "56b8cc9f4971cef253644fafe54063ed7fdca551d4dee0f8c6baa81b855acd72";
 const SEVEN_ZIP_URL: &str = "https://www.7-zip.org/a/7z2602-x64.exe";
-const SEVEN_ZIP_SHA256: &str =
-    "6745fa76dc2ea031596d8678f6f6b99c3c1b435b4164a63485adbbc7b8d82ef0";
+const SEVEN_ZIP_SHA256: &str = "6745fa76dc2ea031596d8678f6f6b99c3c1b435b4164a63485adbbc7b8d82ef0";
 
 pub(super) struct WindowsInstaller {
     distribution: Distribution,
