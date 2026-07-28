@@ -10,11 +10,9 @@ use super::{download_checked, executable, require_sdcc};
 
 const X64_SDCC_URL: &str =
     "https://sourceforge.net/projects/sdcc/files/sdcc-linux-amd64/4.6.0/sdcc-4.6.0-amd64-unknown-linux2.5.tar.bz2/download";
-const X64_SDCC_SHA256: &str =
-    "f6b929c62ed3082a26087885e0f1f9bf41878602ef1f57e40b11b4a01bf4f366";
+const X64_SDCC_SHA256: &str = "f6b929c62ed3082a26087885e0f1f9bf41878602ef1f57e40b11b4a01bf4f366";
 const ARM64_SDCC_URL: &str = "https://sourceforge.net/projects/sdcc/files/snapshot_builds/aarch64-linux-gnu/sdcc-snapshot-aarch64-linux-gnu-20260728-16725.tar.bz2/download";
-const ARM64_SDCC_SHA256: &str =
-    "0cc1c7460007653efda17ccc479139fba0a2ae8f15f5d34553a4b377a336a85c";
+const ARM64_SDCC_SHA256: &str = "0cc1c7460007653efda17ccc479139fba0a2ae8f15f5d34553a4b377a336a85c";
 
 pub(super) struct LinuxInstaller {
     distribution: Distribution,
