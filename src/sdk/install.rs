@@ -73,8 +73,12 @@ pub fn run(force: bool) -> Result<()> {
     let staging = sdk_root.join(format!(".sdcc-staging-{}", std::process::id()));
     recreate_directory(&staging)?;
 
-    let install_result = install_sdcc(&distribution, &workspace, &staging)
-        .and_then(|_| verify_sdcc(&executable(&staging.join("bin"), "sdcc"), distribution.version));
+    let install_result = install_sdcc(&distribution, &workspace, &staging).and_then(|_| {
+        verify_sdcc(
+            &executable(&staging.join("bin"), "sdcc"),
+            distribution.version,
+        )
+    });
     let _ = fs::remove_dir_all(&workspace);
     if install_result.is_err() {
         let _ = fs::remove_dir_all(&staging);
@@ -134,11 +138,7 @@ fn distribution() -> Result<SdccDistribution> {
     }
 }
 
-fn install_sdcc(
-    distribution: &SdccDistribution,
-    workspace: &Path,
-    staging: &Path,
-) -> Result<()> {
+fn install_sdcc(distribution: &SdccDistribution, workspace: &Path, staging: &Path) -> Result<()> {
     match distribution.archive_kind {
         ArchiveKind::WindowsInstaller => install_windows_sdcc(distribution, workspace, staging),
         ArchiveKind::TarBz2 => install_linux_sdcc(distribution, workspace, staging),
