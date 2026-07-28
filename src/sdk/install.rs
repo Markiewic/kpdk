@@ -9,7 +9,7 @@ use crate::toolchain::default_sdk_root;
 
 const SDK_VERSION: &str = "2026.1";
 const SDCC_VERSION: &str = "4.6.0";
-const SDCC_URL: &str = "https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.6.0/sdcc-4.6.0-x64-setup.exe/download";
+const SDCC_URL: &str =\n    "https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.6.0/sdcc-4.6.0-x64-setup.exe/download";
 const SDCC_SHA256: &str = "0a165e155a052fcf7c29ea703ee77d5a8eb578eba58279e79e885618dc4b2e1a";
 
 const SEVEN_ZIP_VERSION: &str = "26.02";
