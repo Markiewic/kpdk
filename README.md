@@ -6,18 +6,26 @@
 The initial release creates projects, invokes SDCC without requiring GNU Make,
 checks the host toolchain, and integrates with Easy PDK Programmer.
 
-> This repository is at an early prototype stage. Automatic SDK installation is
-> the next milestone; the current version expects an installed toolchain.
+> This repository is at an early prototype stage. SDK installation currently
+> covers SDCC on Windows x64; the remaining free-pdk tools are the next milestone.
 
 ## Quick start
 
 ```powershell
+kpdk sdk install
 kpdk new blink --device PFS154
 cd blink
 kpdk doctor
 kpdk build --release
 kpdk flash
 ```
+
+`kpdk sdk install` currently installs the official relocatable SDCC 4.6.0
+distribution on Windows x64. It downloads a pinned 7-Zip bootstrap and extracts
+the official SDCC installer without running it, requiring administrator rights,
+or changing the registry. Every downloaded file is verified against a pinned
+SHA-256 checksum. The preview does not yet install `pdk-includes`,
+`easy-pdk-includes`, or `easypdkprog`.
 
 ## Toolchain discovery
 
@@ -31,9 +39,13 @@ The directory layout is:
 
 ```text
 toolchains/2026.1/
+├── sdcc/
+│   ├── bin/
+│   │   ├── sdcc.exe
+│   │   └── makebin.exe
+│   ├── include/
+│   └── lib/
 ├── bin/
-│   ├── sdcc.exe
-│   ├── makebin.exe
 │   └── easypdkprog.exe
 └── include/
     ├── pdk/
@@ -49,6 +61,7 @@ $env:KPDK_INCLUDE_DIR = "C:\free-pdk\include"
 ## Commands
 
 ```text
+kpdk sdk install [--force]
 kpdk new <name> --device <device>
 kpdk build [--release]
 kpdk clean
@@ -75,4 +88,3 @@ cargo test
 - Linux and macOS SDK bundles
 - Complete, generated device database
 - VS Code configuration and examples
-
