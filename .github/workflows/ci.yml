@@ -11,12 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, ubuntu-24.04-arm, macos-latest]
-    runs-on: ${{ matrix.os }}
+  quality-and-linux-sdk:
+    name: Quality and SDK smoke (ubuntu-latest)
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +24,33 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - name: Install SDK and build a PFS154 project
-        if: runner.os == 'Windows' || runner.os == 'Linux'
         run: |
           cargo run -- sdk install
           cargo run -- new smoke --device PFS154
           cargo run -- build --project smoke --release
+
+  platform-sdk:
+    name: SDK smoke (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install SDK and build a PFS154 project
+        run: |
+          cargo run -- sdk install
+          cargo run -- new smoke --device PFS154
+          cargo run -- build --project smoke --release
+
+  macos-test:
+    name: Test (macos-latest)
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test
