@@ -1,4 +1,4 @@
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::process::Command;
 
 use crate::error::{Error, Result};
@@ -8,8 +8,17 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
+    run_with_env(program, args, &[])
+}
+
+pub fn run_with_env<I, S>(program: &str, args: I, envs: &[(OsString, OsString)]) -> Result<()>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
     let status = Command::new(program)
         .args(args)
+        .envs(envs.iter().map(|(key, value)| (key, value)))
         .status()
         .map_err(|source| {
             if source.kind() == std::io::ErrorKind::NotFound {
