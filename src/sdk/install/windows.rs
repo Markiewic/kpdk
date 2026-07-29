@@ -77,6 +77,7 @@ impl Installer for WindowsInstaller {
         )?;
         println!("Extracting relocatable SDCC into {}...", staging.display());
         extract(&seven_zip, &sdcc_installer, staging)?;
+        prepare_relocatable_layout(staging)?;
         require_sdcc(staging)
     }
 
@@ -111,5 +112,36 @@ fn extract(seven_zip: &Path, archive: &Path, destination: &Path) -> Result<()> {
             program: seven_zip.display().to_string(),
             status: status.code().unwrap_or(-1),
         })
+    }
+}
+
+fn prepare_relocatable_layout(staging: &Path) -> Result<()> {
+    let bin = staging.join("bin");
+    let cc1 = bin.join("cc1");
+    let cc1_exe = bin.join("cc1.exe");
+
+    if !cc1.is_file() {
+        return Err(Error::Message(format!(
+            "SDCC archive does not contain `{}`",
+            cc1.display()
+        )));
+    }
+
+    // The official NSIS package stores this Windows PE executable without an
+    // extension. During a normal install NSIS leaves it that way, but the
+    // relocated GCC-based sdcpp driver invokes `cc1` through CreateProcess,
+    // which needs the `.exe` candidate to be present in the portable layout.
+    fs::copy(&cc1, &cc1_exe).map_err(|source| Error::Write {
+        path: cc1_exe.clone(),
+        source,
+    })?;
+
+    if cc1_exe.is_file() {
+        Ok(())
+    } else {
+        Err(Error::Message(format!(
+            "failed to prepare portable SDCC helper `{}`",
+            cc1_exe.display()
+        )))
     }
 }
