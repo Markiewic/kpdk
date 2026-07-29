@@ -17,16 +17,26 @@ pub fn run() -> Result<()> {
         println!("{label:<16} {}", if ok { "OK" } else { "NOT FOUND" });
         failed |= !ok;
     }
+
+    let include_checks = [
+        ("pdk-includes", "pdk/device.h"),
+        ("easy-pdk", "easy-pdk/calibrate.h"),
+    ];
     match tools.include {
-        Some(path) if path.join("pdk/device.h").is_file() => {
-            println!("{:<16} OK", "pdk-includes")
-        }
         Some(path) => {
-            println!("{:<16} MISSING ({})", "pdk-includes", path.display());
-            failed = true;
+            for (label, relative) in include_checks {
+                if path.join(relative).is_file() {
+                    println!("{label:<16} OK");
+                } else {
+                    println!("{label:<16} MISSING ({})", path.display());
+                    failed = true;
+                }
+            }
         }
         None => {
-            println!("{:<16} NOT CONFIGURED", "pdk-includes");
+            for (label, _) in include_checks {
+                println!("{label:<16} NOT CONFIGURED");
+            }
             failed = true;
         }
     }
