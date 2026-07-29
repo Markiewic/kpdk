@@ -7,8 +7,8 @@ The initial release creates projects, invokes SDCC without requiring GNU Make,
 checks the host toolchain, and integrates with Easy PDK Programmer.
 
 > This repository is at an early prototype stage. SDK installation currently
-> covers SDCC on Windows x64 and Linux x64/ARM64; the remaining free-pdk tools
-> are the next milestone.
+> covers SDCC and the free-pdk headers on Windows x64 and Linux x64/ARM64.
+> Easy PDK Programmer is the next SDK component.
 
 ## Quick start
 
@@ -21,9 +21,11 @@ kpdk build --release
 kpdk flash
 ```
 
-`kpdk sdk install` installs a relocatable SDCC toolchain into the user's local
-application data directory. Every downloaded file is verified against a pinned
-SHA-256 checksum.
+`kpdk sdk install` installs a relocatable SDCC toolchain, `pdk-includes`, and
+`easy-pdk-includes` into the user's local application data directory. Every
+downloaded file is verified against a pinned SHA-256 checksum. The header
+packages are pinned to exact upstream Git commits and recorded in
+`manifest.toml`.
 
 - Windows x64 uses the official SDCC 4.6.0 installer and a pinned portable
   7-Zip bootstrap. The installers are extracted without running them, requiring
@@ -31,11 +33,13 @@ SHA-256 checksum.
 - Linux x64 uses the official stable SDCC 4.6.0 binary archive.
 - Linux ARM64 uses the pinned official SDCC 4.6.2 snapshot, revision 16725,
   because SDCC does not currently publish a stable ARM64 binary archive.
+- All platforms receive pinned snapshots of
+  [pdk-includes](https://github.com/free-pdk/pdk-includes) and
+  [easy-pdk-includes](https://github.com/free-pdk/easy-pdk-includes).
 
-Linux archives are unpacked inside `kpdk`; no system `tar`, `bzip2`,
-`unzip`, package manager, or administrator rights are required. The preview
-does not yet install `pdk-includes`, `easy-pdk-includes`, or
-`easypdkprog`.
+Archives are unpacked inside `kpdk`; no system `tar`, `bzip2`, `gzip`, `unzip`,
+package manager, or administrator rights are required. The preview does not yet
+install `easypdkprog`.
 
 ## Toolchain discovery
 
@@ -67,7 +71,11 @@ toolchains/2026.1/
 │   └── easypdkprog
 └── include/
     ├── pdk/
+    │   ├── device.h
+    │   └── device/
     └── easy-pdk/
+        ├── calibrate.h
+        └── serial_num.h
 ```
 
 Executable names have an `.exe` suffix on Windows. If SDCC and Easy PDK
@@ -96,9 +104,13 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
+The CI integration test also installs the complete compiler SDK, creates a fresh
+PFS154 project, and compiles it on Windows x64, Linux x64, and Linux ARM64.
+
 ## Roadmap
 
-- Install free-pdk includes and Easy PDK Programmer through `kpdk sdk install`
+- Install Easy PDK Programmer through `kpdk sdk install`
+- Linux udev setup and programmer diagnostics
 - macOS SDK bundle
 - WinGet and Scoop packages
 - Complete, generated device database

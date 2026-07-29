@@ -18,6 +18,9 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
-      - name: Test SDCC SDK installation
+      - name: Install SDK and build a PFS154 project
         if: runner.os == 'Windows' || runner.os == 'Linux'
-        run: cargo run -- sdk install
+        run: |
+          cargo run -- sdk install
+          cargo run -- new smoke --device PFS154
+          cargo run -- build --project smoke --release

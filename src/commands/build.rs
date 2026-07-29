@@ -57,7 +57,7 @@ pub fn run(root: &Path, release: bool) -> Result<Artifacts> {
             object.as_os_str().to_owned(),
             source_path.as_os_str().to_owned(),
         ]);
-        process::run(&toolchain.sdcc, args)?;
+        run_sdcc(&toolchain, args)?;
         objects.push(object);
     }
 
@@ -71,7 +71,7 @@ pub fn run(root: &Path, release: bool) -> Result<Artifacts> {
         ihx.as_os_str().to_owned(),
     ];
     link_args.extend(objects.iter().map(|path| path.as_os_str().to_owned()));
-    process::run(&toolchain.sdcc, link_args)?;
+    run_sdcc(&toolchain, link_args)?;
     process::run(
         &toolchain.makebin,
         vec![
@@ -84,4 +84,16 @@ pub fn run(root: &Path, release: bool) -> Result<Artifacts> {
     println!("Built {}", ihx.display());
     println!("Built {}", bin.display());
     Ok(Artifacts { ihx })
+}
+
+fn run_sdcc(toolchain: &Toolchain, args: Vec<OsString>) -> Result<()> {
+    if let Some(compiler_path) = &toolchain.sdcc_compiler_path {
+        let envs = [(
+            OsString::from("COMPILER_PATH"),
+            compiler_path.as_os_str().to_owned(),
+        )];
+        process::run_with_env(&toolchain.sdcc, args, &envs)
+    } else {
+        process::run(&toolchain.sdcc, args)
+    }
 }

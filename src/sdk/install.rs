@@ -1,3 +1,4 @@
+mod includes;
 mod linux;
 mod platform;
 mod windows;
@@ -22,9 +23,10 @@ pub fn run(force: bool) -> Result<()> {
         Error::Message("cannot determine the local application data directory".into())
     })?;
     let sdcc_root = sdk_root.join("sdcc");
+    let include_root = sdk_root.join("include");
     let sdcc_exe = executable(&sdcc_root.join("bin"), "sdcc");
 
-    if sdcc_exe.is_file() && !force {
+    if sdcc_exe.is_file() && includes::verify(&include_root).is_ok() && !force {
         println!(
             "SDK {SDK_VERSION} is already installed at {}",
             sdk_root.display()
@@ -38,38 +40,38 @@ pub fn run(force: bool) -> Result<()> {
         source,
     })?;
 
-    let workspace = std::env::temp_dir().join(format!("kpdk-sdk-install-{}", std::process::id()));
+    let process_id = std::process::id();
+    let workspace = std::env::temp_dir().join(format!("kpdk-sdk-install-{process_id}"));
     recreate_directory(&workspace)?;
-    let staging = sdk_root.join(format!(".sdcc-staging-{}", std::process::id()));
-    recreate_directory(&staging)?;
+    let sdcc_staging = sdk_root.join(format!(".sdcc-staging-{process_id}"));
+    let include_staging = sdk_root.join(format!(".include-staging-{process_id}"));
+    recreate_directory(&sdcc_staging)?;
+    recreate_directory(&include_staging)?;
 
-    let install_result = installer.install(&workspace, &staging).and_then(|_| {
-        verify_sdcc(
-            &executable(&staging.join("bin"), "sdcc"),
-            distribution.version,
-        )
-    });
+    let install_result = installer
+        .install(&workspace, &sdcc_staging)
+        .and_then(|_| {
+            verify_sdcc(
+                &executable(&sdcc_staging.join("bin"), "sdcc"),
+                distribution.version,
+            )
+        })
+        .and_then(|_| includes::install(&workspace, &include_staging));
     let _ = fs::remove_dir_all(&workspace);
     if install_result.is_err() {
-        let _ = fs::remove_dir_all(&staging);
+        let _ = fs::remove_dir_all(&sdcc_staging);
+        let _ = fs::remove_dir_all(&include_staging);
     }
     install_result?;
 
-    if sdcc_root.exists() {
-        fs::remove_dir_all(&sdcc_root).map_err(|source| Error::Write {
-            path: sdcc_root.clone(),
-            source,
-        })?;
-    }
-    fs::rename(&staging, &sdcc_root).map_err(|source| Error::Write {
-        path: sdcc_root.clone(),
-        source,
-    })?;
+    replace_directory(&sdcc_staging, &sdcc_root)?;
+    replace_directory(&include_staging, &include_root)?;
 
     verify_sdcc(&sdcc_exe, distribution.version)?;
+    includes::verify(&include_root)?;
     write_manifest(&sdk_root, installer.as_ref())?;
     println!("Installed kpdk SDK {SDK_VERSION} at {}", sdk_root.display());
-    println!("Note: free-pdk includes and easypdkprog are not installed by this preview yet.");
+    println!("Note: easypdkprog is not installed by this preview yet.");
     Ok(())
 }
 
@@ -82,6 +84,19 @@ fn recreate_directory(path: &Path) -> Result<()> {
     }
     fs::create_dir_all(path).map_err(|source| Error::Write {
         path: path.to_owned(),
+        source,
+    })
+}
+
+fn replace_directory(staging: &Path, destination: &Path) -> Result<()> {
+    if destination.exists() {
+        fs::remove_dir_all(destination).map_err(|source| Error::Write {
+            path: destination.to_owned(),
+            source,
+        })?;
+    }
+    fs::rename(staging, destination).map_err(|source| Error::Write {
+        path: destination.to_owned(),
         source,
     })
 }
@@ -173,6 +188,7 @@ fn write_manifest(root: &Path, installer: &dyn Installer) -> Result<()> {
         contents.push_str(&format!("revision = {revision}\n"));
     }
     installer.append_manifest(&mut contents);
+    includes::append_manifest(&mut contents);
     fs::write(&path, contents).map_err(|source| Error::Write { path, source })
 }
 
