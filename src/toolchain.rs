@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 
 pub struct Toolchain {
     pub sdcc: String,
+    pub sdcc_compiler_path: Option<PathBuf>,
     pub makebin: String,
     pub easypdkprog: String,
     pub include: Option<PathBuf>,
@@ -19,6 +20,7 @@ impl Toolchain {
             let sdcc_bin = root.join("sdcc").join("bin");
             return Self {
                 sdcc: executable(&sdcc_bin, "sdcc"),
+                sdcc_compiler_path: cfg!(windows).then_some(sdcc_bin.clone()),
                 makebin: executable(&sdcc_bin, "makebin"),
                 easypdkprog: executable(&bin, "easypdkprog"),
                 include: Some(root.join("include")),
@@ -27,6 +29,7 @@ impl Toolchain {
 
         Self {
             sdcc: "sdcc".into(),
+            sdcc_compiler_path: None,
             makebin: "makebin".into(),
             easypdkprog: "easypdkprog".into(),
             include: env::var_os("KPDK_INCLUDE_DIR").map(PathBuf::from),
