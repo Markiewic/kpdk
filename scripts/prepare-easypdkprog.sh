@@ -20,4 +20,5 @@ tar -xzf "$work_dir/source.tar.gz" -C "$work_dir/source" --strip-components=1
 make -C "$work_dir/source"
 mkdir -p "$(dirname "$destination")"
 install -m 755 "$work_dir/source/easypdkprog" "$destination"
+install -m 644 "$work_dir/source/LICENSE" "$(dirname "$destination")/easypdkprog-LICENSE"
 "$destination" --version
