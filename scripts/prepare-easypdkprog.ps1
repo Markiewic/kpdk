@@ -28,6 +28,9 @@ try {
 
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $Destination) | Out-Null
     Copy-Item -Path $Source -Destination $Destination -Force
+    $LicenseSource = Join-Path $Extracted "EASYPDKPROG/LICENSE"
+    $LicenseDestination = Join-Path (Split-Path -Parent $Destination) "easypdkprog-LICENSE"
+    Copy-Item -Path $LicenseSource -Destination $LicenseDestination -Force
     & $Destination --version
     if ($LASTEXITCODE -ne 0) {
         throw "installed easypdkprog.exe exited with status $LASTEXITCODE"
