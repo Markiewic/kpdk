@@ -11,6 +11,7 @@ pub(super) const VERSION: &str = "1.3";
 pub(super) const REVISION: &str = "c704defbf90a934d5d4969bded63e824048e0d24";
 pub(super) const SOURCE: &str =
     "https://github.com/free-pdk/easy-pdk-programmer-software/tree/1.3";
+const LICENSE_FILE: &str = "easypdkprog-LICENSE";
 
 pub(super) fn install(staging: &Path) -> Result<()> {
     fs::create_dir_all(staging).map_err(|source| Error::Write {
@@ -24,10 +25,33 @@ pub(super) fn install(staging: &Path) -> Result<()> {
         path: destination.clone(),
         source: error,
     })?;
-    verify_binary(&destination)
+
+    let source_license = source
+        .parent()
+        .map(|directory| directory.join(LICENSE_FILE))
+        .ok_or_else(|| Error::Message("cannot locate the bundled easypdkprog license".into()))?;
+    let destination_license = staging.join(LICENSE_FILE);
+    if !source_license.is_file() {
+        return Err(Error::Message(format!(
+            "bundled easypdkprog license was not found at `{}`",
+            source_license.display()
+        )));
+    }
+    fs::copy(&source_license, &destination_license).map_err(|error| Error::Write {
+        path: destination_license,
+        source: error,
+    })?;
+    verify(staging)
 }
 
 pub(super) fn verify(root: &Path) -> Result<()> {
+    let license = root.join(LICENSE_FILE);
+    if !license.is_file() {
+        return Err(Error::Message(format!(
+            "easypdkprog license was not installed at `{}`",
+            license.display()
+        )));
+    }
     verify_binary(&executable(root, "easypdkprog"))
 }
 
