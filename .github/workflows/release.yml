@@ -48,6 +48,17 @@ jobs:
       - name: Package macOS
         if: runner.os == 'macOS'
         run: tar -czf "${{ matrix.archive }}" -C "target/${{ matrix.target }}/release" kpdk
+      - name: Write checksum (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash -Algorithm SHA256 "${{ matrix.archive }}").Hash.ToLowerInvariant()
+          "$hash  ${{ matrix.archive }}" | Set-Content -NoNewline "${{ matrix.archive }}.sha256"
+      - name: Write checksum (Unix)
+        if: runner.os != 'Windows'
+        run: sha256sum "${{ matrix.archive }}" > "${{ matrix.archive }}.sha256"
       - uses: softprops/action-gh-release@v2
         with:
-          files: ${{ matrix.archive }}
+          files: |
+            ${{ matrix.archive }}
+            ${{ matrix.archive }}.sha256
