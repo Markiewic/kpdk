@@ -1,6 +1,7 @@
 mod includes;
 mod linux;
 mod platform;
+mod programmer;
 mod windows;
 
 use sha2::{Digest, Sha256};
@@ -24,9 +25,14 @@ pub fn run(force: bool) -> Result<()> {
     })?;
     let sdcc_root = sdk_root.join("sdcc");
     let include_root = sdk_root.join("include");
+    let bin_root = sdk_root.join("bin");
     let sdcc_exe = executable(&sdcc_root.join("bin"), "sdcc");
 
-    if sdcc_exe.is_file() && includes::verify(&include_root).is_ok() && !force {
+    if sdcc_exe.is_file()
+        && includes::verify(&include_root).is_ok()
+        && programmer::verify(&bin_root).is_ok()
+        && !force
+    {
         println!(
             "SDK {SDK_VERSION} is already installed at {}",
             sdk_root.display()
@@ -45,8 +51,10 @@ pub fn run(force: bool) -> Result<()> {
     recreate_directory(&workspace)?;
     let sdcc_staging = sdk_root.join(format!(".sdcc-staging-{process_id}"));
     let include_staging = sdk_root.join(format!(".include-staging-{process_id}"));
+    let bin_staging = sdk_root.join(format!(".bin-staging-{process_id}"));
     recreate_directory(&sdcc_staging)?;
     recreate_directory(&include_staging)?;
+    recreate_directory(&bin_staging)?;
 
     let install_result = installer
         .install(&workspace, &sdcc_staging)
@@ -56,22 +64,25 @@ pub fn run(force: bool) -> Result<()> {
                 distribution.version,
             )
         })
-        .and_then(|_| includes::install(&workspace, &include_staging));
+        .and_then(|_| includes::install(&workspace, &include_staging))
+        .and_then(|_| programmer::install(&bin_staging));
     let _ = fs::remove_dir_all(&workspace);
     if install_result.is_err() {
         let _ = fs::remove_dir_all(&sdcc_staging);
         let _ = fs::remove_dir_all(&include_staging);
+        let _ = fs::remove_dir_all(&bin_staging);
     }
     install_result?;
 
     replace_directory(&sdcc_staging, &sdcc_root)?;
     replace_directory(&include_staging, &include_root)?;
+    replace_directory(&bin_staging, &bin_root)?;
 
     verify_sdcc(&sdcc_exe, distribution.version)?;
     includes::verify(&include_root)?;
+    programmer::verify(&bin_root)?;
     write_manifest(&sdk_root, installer.as_ref())?;
     println!("Installed kpdk SDK {SDK_VERSION} at {}", sdk_root.display());
-    println!("Note: easypdkprog is not installed by this preview yet.");
     Ok(())
 }
 
@@ -189,6 +200,7 @@ fn write_manifest(root: &Path, installer: &dyn Installer) -> Result<()> {
     }
     installer.append_manifest(&mut contents);
     includes::append_manifest(&mut contents);
+    programmer::append_manifest(&mut contents);
     fs::write(&path, contents).map_err(|source| Error::Write { path, source })
 }
 

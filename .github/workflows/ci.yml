@@ -23,9 +23,16 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
+      - name: Check Linux installer syntax
+        run: bash -n scripts/install-kpdk.sh
+      - name: Prepare Easy PDK Programmer
+        run: bash scripts/prepare-easypdkprog.sh "$RUNNER_TEMP/easypdkprog"
       - name: Install SDK and build a PFS154 project
+        env:
+          KPDK_EASYPDKPROG: ${{ runner.temp }}/easypdkprog
         run: |
           cargo run -- sdk install
+          cargo run -- doctor
           cargo run -- new smoke --device PFS154
           cargo run -- build --project smoke --release
 
@@ -34,15 +41,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-24.04-arm]
+        include:
+          - os: windows-latest
+            programmer: easypdkprog.exe
+          - os: ubuntu-24.04-arm
+            programmer: easypdkprog
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Check Windows installer syntax
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path "./scripts/install-kpdk.ps1"),
+            [ref] $tokens,
+            [ref] $errors
+          ) | Out-Null
+          if ($errors.Count -ne 0) {
+            throw ($errors | Out-String)
+          }
+      - name: Prepare Easy PDK Programmer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/prepare-easypdkprog.ps1 "$env:RUNNER_TEMP/easypdkprog.exe"
+      - name: Prepare Easy PDK Programmer (Linux)
+        if: runner.os == 'Linux'
+        run: bash scripts/prepare-easypdkprog.sh "$RUNNER_TEMP/easypdkprog"
       - name: Install SDK and build a PFS154 project
+        env:
+          KPDK_EASYPDKPROG: ${{ runner.temp }}/${{ matrix.programmer }}
         run: |
           cargo run -- sdk install
+          cargo run -- doctor
           cargo run -- new smoke --device PFS154
           cargo run -- build --project smoke --release
 
