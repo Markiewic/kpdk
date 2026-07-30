@@ -10,6 +10,32 @@ checks the host toolchain, and integrates with Easy PDK Programmer.
 > covers SDCC, the free-pdk headers, and Easy PDK Programmer on Windows x64 and
 > Linux x64/ARM64.
 
+## Install kpdk
+
+Install the complete release bundle. The installer keeps `kpdk`,
+`easypdkprog`, and `easypdkprog-LICENSE` together in one directory, verifies
+the release SHA-256 checksum, and adds that directory to the user `PATH`.
+
+Linux x64/ARM64:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/install-kpdk.sh | bash
+```
+
+Windows x64 PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/install-kpdk.ps1 | iex
+```
+
+The default installation directories are `~/.local/bin` on Linux and
+`%LOCALAPPDATA%\Programs\kpdk\bin` on Windows. Set `KPDK_INSTALL_DIR`
+before running the installer to choose another directory.
+
+For a manual installation, extract the entire release archive into a directory
+already present in `PATH`. Do not copy only the `kpdk` executable:
+`easypdkprog` and its license are required parts of the distribution.
+
 ## Quick start
 
 ```bash
