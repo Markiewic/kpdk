@@ -31,12 +31,22 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - run: cargo build --release --target ${{ matrix.target }}
+      - name: Prepare Easy PDK Programmer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/prepare-easypdkprog.ps1 "target/${{ matrix.target }}/release/easypdkprog.exe"
+      - name: Prepare Easy PDK Programmer (Linux)
+        if: runner.os == 'Linux'
+        run: bash scripts/prepare-easypdkprog.sh "target/${{ matrix.target }}/release/easypdkprog"
       - name: Package Windows
         if: runner.os == 'Windows'
         shell: pwsh
-        run: Compress-Archive "target/${{ matrix.target }}/release/kpdk.exe" "${{ matrix.archive }}"
-      - name: Package Unix
-        if: runner.os != 'Windows'
+        run: Compress-Archive "target/${{ matrix.target }}/release/kpdk.exe","target/${{ matrix.target }}/release/easypdkprog.exe" "${{ matrix.archive }}"
+      - name: Package Linux
+        if: runner.os == 'Linux'
+        run: tar -czf "${{ matrix.archive }}" -C "target/${{ matrix.target }}/release" kpdk easypdkprog
+      - name: Package macOS
+        if: runner.os == 'macOS'
         run: tar -czf "${{ matrix.archive }}" -C "target/${{ matrix.target }}/release" kpdk
       - uses: softprops/action-gh-release@v2
         with:
