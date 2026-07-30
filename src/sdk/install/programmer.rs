@@ -9,8 +9,7 @@ use super::executable;
 
 pub(super) const VERSION: &str = "1.3";
 pub(super) const REVISION: &str = "c704defbf90a934d5d4969bded63e824048e0d24";
-pub(super) const SOURCE: &str =
-    "https://github.com/free-pdk/easy-pdk-programmer-software/tree/1.3";
+pub(super) const SOURCE: &str = "https://github.com/free-pdk/easy-pdk-programmer-software/tree/1.3";
 const LICENSE_FILE: &str = "easypdkprog-LICENSE";
 
 pub(super) fn install(staging: &Path) -> Result<()> {
