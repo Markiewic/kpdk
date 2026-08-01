@@ -1,3 +1,7 @@
+param(
+    [string]$Version = "latest"
+)
+
 $ErrorActionPreference = "Stop"
 
 $Repository = "Markiewic/kpdk"
@@ -8,14 +12,19 @@ else {
     Join-Path $env:LOCALAPPDATA "Programs/kpdk/bin"
 }
 $ArchiveName = "kpdk-windows-x64.zip"
-$BaseUrl = "https://github.com/$Repository/releases/latest/download"
+$BaseUrl = if ($Version -eq "latest") {
+    "https://github.com/$Repository/releases/latest/download"
+}
+else {
+    "https://github.com/$Repository/releases/download/$Version"
+}
 $WorkDir = Join-Path ([System.IO.Path]::GetTempPath()) "kpdk-install-$PID"
 $Archive = Join-Path $WorkDir $ArchiveName
 $Checksum = Join-Path $WorkDir "$ArchiveName.sha256"
 
 try {
     New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
-    Write-Host "Downloading $ArchiveName..."
+    Write-Host "Downloading $ArchiveName from $Version..."
     Invoke-WebRequest -Uri "$BaseUrl/$ArchiveName" -OutFile $Archive
     Invoke-WebRequest -Uri "$BaseUrl/$ArchiveName.sha256" -OutFile $Checksum
 
