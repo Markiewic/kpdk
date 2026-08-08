@@ -36,7 +36,7 @@ pub fn architecture(device: &str) -> Result<Architecture> {
     let normalized = device.to_ascii_uppercase();
     SUPPORTED_DEVICES
         .iter()
-        .find(|(name, _)| *name == normalized)
+        .find(|(name, _)| *name == normalized.as_str())
         .map(|(_, architecture)| *architecture)
         .ok_or_else(|| {
             Error::Message(format!(
