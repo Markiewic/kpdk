@@ -58,11 +58,7 @@ fn programmer_executable() -> String {
 }
 
 pub fn default_sdk_root() -> Option<PathBuf> {
-    dirs::data_local_dir().map(|root| {
-        root.join("kpdk")
-            .join("toolchains")
-            .join(TOOLCHAIN_VERSION)
-    })
+    dirs::data_local_dir().map(|root| root.join("kpdk").join("toolchains").join(TOOLCHAIN_VERSION))
 }
 
 fn executable(directory: &Path, name: &str) -> String {
