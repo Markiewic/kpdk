@@ -69,12 +69,7 @@ fn run_inner(root: &Path, release: bool, capture_output: bool) -> Result<Artifac
             object.as_os_str().to_owned(),
             source_path.as_os_str().to_owned(),
         ]);
-        run_sdcc(
-            &toolchain,
-            args,
-            capture_output,
-            &mut diagnostics,
-        )?;
+        run_sdcc(&toolchain, args, capture_output, &mut diagnostics)?;
         objects.push(object);
     }
 
