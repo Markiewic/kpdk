@@ -101,10 +101,9 @@ pub fn run() -> Result<()> {
             .serve(stdio())
             .await
             .map_err(|error| Error::Message(format!("failed to start MCP server: {error}")))?;
-        service
-            .waiting()
-            .await
-            .map_err(|error| Error::Message(format!("MCP server stopped with an error: {error}")))?;
+        service.waiting().await.map_err(|error| {
+            Error::Message(format!("MCP server stopped with an error: {error}"))
+        })?;
         Ok(())
     })
 }
