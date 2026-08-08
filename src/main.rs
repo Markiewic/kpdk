@@ -9,7 +9,7 @@ mod toolchain;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-use crate::commands::{build, clean, doctor, flash, new, probe};
+use crate::commands::{build, clean, doctor, flash, new, probe, vscode};
 use crate::error::Result;
 use crate::sdk::install;
 
@@ -62,6 +62,11 @@ enum Command {
         #[arg(long)]
         yes: bool,
     },
+    /// Generate or refresh VS Code project integration.
+    Vscode {
+        #[arg(long, default_value = ".")]
+        project: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
@@ -89,6 +94,7 @@ fn run() -> Result<()> {
         Command::Doctor => doctor::run(),
         Command::Probe => probe::run(),
         Command::Flash { project, port, yes } => flash::run(&project, port.as_deref(), yes),
+        Command::Vscode { project } => vscode::run(&project),
     }
 }
 
