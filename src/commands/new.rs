@@ -30,7 +30,7 @@ pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
     write(&root.join("src/main.c"), MAIN_C)?;
     write(
         &root.join(".gitignore"),
-        "/build/\n/compile_commands.json\n/.vscode/c_cpp_properties.json\n",
+        "/build/\n/compile_commands.json\n",
     )?;
     vscode::run(root)?;
 
