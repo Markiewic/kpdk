@@ -32,6 +32,7 @@ jobs:
           KPDK_EASYPDKPROG: ${{ runner.temp }}/easypdkprog
         run: |
           cargo run -- sdk install
+          test ! -e "$HOME/.local/share/kpdk/toolchains/2026.1/bin/easypdkprog"
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
           python3 -m json.tool smoke/.vscode/c_cpp_properties.json >/dev/null
@@ -85,6 +86,19 @@ jobs:
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
           cargo run -- build --project smoke --release
+
+      - name: Ensure programmer is not copied into SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $legacy = Join-Path $env:LOCALAPPDATA "kpdk/toolchains/2026.1/bin/easypdkprog.exe"
+          if (Test-Path $legacy) {
+            throw "easypdkprog must remain outside the SDK: $legacy"
+          }
+
+      - name: Ensure programmer is not copied into SDK (Linux)
+        if: runner.os == 'Linux'
+        run: test ! -e "$HOME/.local/share/kpdk/toolchains/2026.1/bin/easypdkprog"
 
       - name: Validate generated VS Code integration (Windows)
         if: runner.os == 'Windows'

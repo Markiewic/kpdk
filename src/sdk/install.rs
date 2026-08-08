@@ -1,7 +1,6 @@
 mod includes;
 mod linux;
 mod platform;
-mod programmer;
 mod windows;
 
 use sha2::{Digest, Sha256};
@@ -25,14 +24,12 @@ pub fn run(force: bool) -> Result<()> {
     })?;
     let sdcc_root = sdk_root.join("sdcc");
     let include_root = sdk_root.join("include");
-    let bin_root = sdk_root.join("bin");
     let sdcc_exe = executable(&sdcc_root.join("bin"), "sdcc");
 
-    if sdcc_exe.is_file()
-        && includes::verify(&include_root).is_ok()
-        && programmer::verify(&bin_root).is_ok()
-        && !force
-    {
+    remove_legacy_programmer(&sdk_root)?;
+
+    if sdcc_exe.is_file() && includes::verify(&include_root).is_ok() && !force {
+        write_manifest(&sdk_root, installer.as_ref())?;
         println!(
             "SDK {SDK_VERSION} is already installed at {}",
             sdk_root.display()
@@ -51,10 +48,8 @@ pub fn run(force: bool) -> Result<()> {
     recreate_directory(&workspace)?;
     let sdcc_staging = sdk_root.join(format!(".sdcc-staging-{process_id}"));
     let include_staging = sdk_root.join(format!(".include-staging-{process_id}"));
-    let bin_staging = sdk_root.join(format!(".bin-staging-{process_id}"));
     recreate_directory(&sdcc_staging)?;
     recreate_directory(&include_staging)?;
-    recreate_directory(&bin_staging)?;
 
     let install_result = installer
         .install(&workspace, &sdcc_staging)
@@ -64,25 +59,46 @@ pub fn run(force: bool) -> Result<()> {
                 distribution.version,
             )
         })
-        .and_then(|_| includes::install(&workspace, &include_staging))
-        .and_then(|_| programmer::install(&bin_staging));
+        .and_then(|_| includes::install(&workspace, &include_staging));
     let _ = fs::remove_dir_all(&workspace);
     if install_result.is_err() {
         let _ = fs::remove_dir_all(&sdcc_staging);
         let _ = fs::remove_dir_all(&include_staging);
-        let _ = fs::remove_dir_all(&bin_staging);
     }
     install_result?;
 
     replace_directory(&sdcc_staging, &sdcc_root)?;
     replace_directory(&include_staging, &include_root)?;
-    replace_directory(&bin_staging, &bin_root)?;
 
     verify_sdcc(&sdcc_exe, distribution.version)?;
     includes::verify(&include_root)?;
-    programmer::verify(&bin_root)?;
     write_manifest(&sdk_root, installer.as_ref())?;
     println!("Installed kpdk SDK {SDK_VERSION} at {}", sdk_root.display());
+    Ok(())
+}
+
+fn remove_legacy_programmer(root: &Path) -> Result<()> {
+    let bin = root.join("bin");
+    for name in ["easypdkprog", "easypdkprog.exe", "easypdkprog-LICENSE"] {
+        let path = bin.join(name);
+        if path.is_file() {
+            fs::remove_file(&path).map_err(|source| Error::Write {
+                path: path.clone(),
+                source,
+            })?;
+        }
+    }
+
+    if bin.is_dir() {
+        let mut entries = fs::read_dir(&bin).map_err(|source| Error::Read {
+            path: bin.clone(),
+            source,
+        })?;
+        if entries.next().is_none() {
+            fs::remove_dir(&bin).map_err(|source| Error::Write { path: bin, source })?;
+        }
+    }
+
     Ok(())
 }
 
@@ -200,7 +216,6 @@ fn write_manifest(root: &Path, installer: &dyn Installer) -> Result<()> {
     }
     installer.append_manifest(&mut contents);
     includes::append_manifest(&mut contents);
-    programmer::append_manifest(&mut contents);
     fs::write(&path, contents).map_err(|source| Error::Write { path, source })
 }
 
@@ -210,4 +225,27 @@ fn executable(directory: &Path, name: &str) -> PathBuf {
     } else {
         name.to_owned()
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn removes_only_legacy_programmer_files() {
+        let temp = tempfile::tempdir().unwrap();
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fs::write(bin.join("easypdkprog"), b"legacy").unwrap();
+        fs::write(bin.join("easypdkprog.exe"), b"legacy").unwrap();
+        fs::write(bin.join("easypdkprog-LICENSE"), b"legacy").unwrap();
+        fs::write(bin.join("keep.txt"), b"user-owned").unwrap();
+
+        remove_legacy_programmer(temp.path()).unwrap();
+
+        assert!(!bin.join("easypdkprog").exists());
+        assert!(!bin.join("easypdkprog.exe").exists());
+        assert!(!bin.join("easypdkprog-LICENSE").exists());
+        assert_eq!(fs::read(bin.join("keep.txt")).unwrap(), b"user-owned");
+    }
 }

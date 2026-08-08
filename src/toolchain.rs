@@ -11,18 +11,19 @@ pub struct Toolchain {
 
 impl Toolchain {
     pub fn discover() -> Self {
+        let easypdkprog = programmer_executable();
+
         if let Some(root) = env::var_os("KPDK_SDK_DIR")
             .map(PathBuf::from)
             .or_else(default_sdk_root)
             .filter(|root| root.is_dir())
         {
-            let bin = root.join("bin");
             let sdcc_bin = root.join("sdcc").join("bin");
             return Self {
                 sdcc: executable(&sdcc_bin, "sdcc"),
                 sdcc_compiler_path: cfg!(windows).then_some(sdcc_bin.clone()),
                 makebin: executable(&sdcc_bin, "makebin"),
-                easypdkprog: executable(&bin, "easypdkprog"),
+                easypdkprog,
                 include: Some(root.join("include")),
             };
         }
@@ -31,10 +32,27 @@ impl Toolchain {
             sdcc: "sdcc".into(),
             sdcc_compiler_path: None,
             makebin: "makebin".into(),
-            easypdkprog: "easypdkprog".into(),
+            easypdkprog,
             include: env::var_os("KPDK_INCLUDE_DIR").map(PathBuf::from),
         }
     }
+}
+
+fn programmer_executable() -> String {
+    if let Some(path) = env::var_os("KPDK_EASYPDKPROG") {
+        return PathBuf::from(path).to_string_lossy().into_owned();
+    }
+
+    if let Ok(current_exe) = env::current_exe() {
+        if let Some(directory) = current_exe.parent() {
+            let bundled = executable(directory, "easypdkprog");
+            if Path::new(&bundled).is_file() {
+                return bundled;
+            }
+        }
+    }
+
+    "easypdkprog".into()
 }
 
 pub fn default_sdk_root() -> Option<PathBuf> {

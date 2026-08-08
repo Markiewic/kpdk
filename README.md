@@ -7,8 +7,9 @@ The initial release creates projects, invokes SDCC without requiring GNU Make,
 checks the host toolchain, and integrates with Easy PDK Programmer.
 
 > This repository is at an early prototype stage. SDK installation currently
-> covers SDCC, the free-pdk headers, and Easy PDK Programmer on Windows x64 and
-> Linux x64/ARM64.
+> covers SDCC and the free-pdk headers on Windows x64 and Linux x64/ARM64.
+> Easy PDK Programmer is shipped alongside the `kpdk` executable in release
+> bundles.
 
 ## Install kpdk
 
@@ -48,9 +49,8 @@ kpdk flash
 ```
 
 `kpdk sdk install` installs a relocatable SDCC toolchain, `pdk-includes`,
-`easy-pdk-includes`, and `easypdkprog` into the user's local application data
-directory. Every
-downloaded file is verified against a pinned SHA-256 checksum. The header
+and `easy-pdk-includes` into the user's local application data directory.
+Every downloaded file is verified against a pinned SHA-256 checksum. The header
 packages are pinned to exact upstream Git commits and recorded in
 `manifest.toml`.
 
@@ -63,10 +63,10 @@ packages are pinned to exact upstream Git commits and recorded in
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
   [easy-pdk-includes](https://github.com/free-pdk/easy-pdk-includes).
-- Windows and Linux release archives also contain Easy PDK Programmer 1.3.
-  Linux x64/ARM64 binaries are built from the pinned upstream tag; Windows uses
-  the official upstream release binary verified by SHA-256. `sdk install`
-  copies and verifies the bundled executable without requiring a C compiler.
+- Windows and Linux release archives also contain Easy PDK Programmer 1.3 next
+  to `kpdk`. Linux x64/ARM64 binaries are built from the pinned upstream tag;
+  Windows uses the official upstream release binary verified by SHA-256.
+  `kpdk probe`, `kpdk flash`, and `kpdk doctor` use this copy directly.
 
 Archives are unpacked inside `kpdk`; no system `tar`, `bzip2`, `gzip`, `unzip`,
 package manager, C compiler, or administrator rights are required. The
@@ -99,8 +99,6 @@ toolchains/2026.1/
 │   │   └── makebin
 │   ├── include/
 │   └── lib/
-├── bin/
-│   └── easypdkprog
 └── include/
     ├── pdk/
     │   ├── device.h
@@ -110,11 +108,11 @@ toolchains/2026.1/
         └── serial_num.h
 ```
 
-Executable names have an `.exe` suffix on Windows. If SDCC and Easy PDK
-Programmer are already in `PATH`, set only `KPDK_INCLUDE_DIR` to the
-free-pdk include directory. Source builds and custom packages can set
-`KPDK_EASYPDKPROG` to an existing programmer executable before running
-`kpdk sdk install`.
+Executable names have an `.exe` suffix on Windows. Easy PDK Programmer is
+discovered independently from the SDK: `KPDK_EASYPDKPROG` takes precedence,
+then a copy next to the running `kpdk` executable, then `easypdkprog` from
+`PATH`. If SDCC is already in `PATH`, set only `KPDK_INCLUDE_DIR` to the
+free-pdk include directory.
 
 ## Commands
 
