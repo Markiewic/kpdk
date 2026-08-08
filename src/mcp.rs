@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::commands::build;
 use crate::device;
-use crate::error::{Error, Result};
+use crate::error::Error;
 
 #[derive(Clone)]
 struct KpdkMcp;
@@ -91,7 +91,7 @@ impl KpdkMcp {
     }
 }
 
-pub fn run() -> Result<()> {
+pub fn run() -> crate::error::Result<()> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .build()
         .map_err(|error| Error::Message(format!("failed to start MCP runtime: {error}")))?;
