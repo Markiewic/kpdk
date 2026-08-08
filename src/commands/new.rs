@@ -1,9 +1,9 @@
 use std::fs;
 use std::path::Path;
 
+use crate::commands::vscode;
 use crate::device;
 use crate::error::{Error, Result};
-use crate::commands::vscode;
 
 pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
     device::architecture(device_name)?;
@@ -76,10 +76,19 @@ mod tests {
         run("firmware", "PFS154", 8_000_000, 5_000).unwrap();
         assert!(temp.path().join("firmware/pdk.toml").is_file());
         assert!(temp.path().join("firmware/src/main.c").is_file());
-        assert!(temp.path().join("firmware/.vscode/c_cpp_properties.json").is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/c_cpp_properties.json")
+            .is_file());
         assert!(temp.path().join("firmware/.vscode/tasks.json").is_file());
-        assert!(temp.path().join("firmware/.vscode/extensions.json").is_file());
-        assert!(temp.path().join("firmware/.vscode/kpdk-intellisense.h").is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/extensions.json")
+            .is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/kpdk-intellisense.h")
+            .is_file());
         assert!(temp.path().join("firmware/compile_commands.json").is_file());
 
         std::env::set_current_dir(previous).unwrap();
