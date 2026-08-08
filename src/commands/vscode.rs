@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use crate::config::ProjectFile;
 use crate::device;
 use crate::error::{Error, Result};
-use crate::toolchain::{default_sdk_root, Toolchain};
+use crate::toolchain::{default_sdk_root, Toolchain, TOOLCHAIN_VERSION};
 
 pub fn run(root: &Path) -> Result<()> {
     let config = ProjectFile::load(root)?;
@@ -25,7 +25,7 @@ pub fn run(root: &Path) -> Result<()> {
 
     write(
         &vscode.join("c_cpp_properties.json"),
-        &cpp_properties(&config, &include),
+        &cpp_properties(&config),
     )?;
     write(&vscode.join("extensions.json"), EXTENSIONS)?;
     write(&vscode.join("kpdk-intellisense.h"), INTELLISENSE_HEADER)?;
@@ -45,12 +45,39 @@ pub fn run(root: &Path) -> Result<()> {
     Ok(())
 }
 
-fn cpp_properties(config: &ProjectFile, include: &Path) -> String {
+fn cpp_properties(config: &ProjectFile) -> String {
+    let configurations = [
+        (
+            "Win32",
+            format!(
+                "${{env:LOCALAPPDATA}}/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+        (
+            "Linux",
+            format!(
+                "${{env:HOME}}/.local/share/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+        (
+            "Mac",
+            format!(
+                "${{env:HOME}}/Library/Application Support/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+    ]
+    .into_iter()
+    .map(|(name, include)| cpp_configuration(config, name, &include))
+    .collect::<Vec<_>>()
+    .join(",\n");
+
+    format!("{{\n  \"configurations\": [\n{configurations}\n  ],\n  \"version\": 4\n}}\n")
+}
+
+fn cpp_configuration(config: &ProjectFile, name: &str, include: &str) -> String {
     format!(
-        r#"{{
-  "configurations": [
-    {{
-      "name": "kpdk",
+        r#"    {{
+      "name": {name},
       "includePath": [
         "${{workspaceFolder}}/src",
         {include}
@@ -65,17 +92,13 @@ fn cpp_properties(config: &ProjectFile, include: &Path) -> String {
         "${{workspaceFolder}}/.vscode/kpdk-intellisense.h"
       ],
       "cStandard": "c11",
-      "intelliSenseMode": {mode}
-    }}
-  ],
-  "version": 4
-}}
-"#,
-        include = json_string(&include.to_string_lossy()),
+      "intelliSenseMode": "${{default}}"
+    }}"#,
+        name = json_string(name),
+        include = json_string(include),
         device = json_string(&config.project.device.to_ascii_uppercase()),
         clock = json_string(&format!("F_CPU={}", config.project.clock_hz)),
         vdd = json_string(&format!("TARGET_VDD_MV={}", config.project.target_vdd_mv)),
-        mode = json_string(intellisense_mode()),
     )
 }
 
@@ -141,22 +164,6 @@ fn absolute_path(path: &Path) -> PathBuf {
         std::env::current_dir()
             .map(|cwd| cwd.join(path))
             .unwrap_or_else(|_| path.to_owned())
-    }
-}
-
-fn intellisense_mode() -> &'static str {
-    if cfg!(windows) {
-        "windows-gcc-x64"
-    } else if cfg!(target_os = "macos") {
-        if cfg!(target_arch = "aarch64") {
-            "macos-clang-arm64"
-        } else {
-            "macos-clang-x64"
-        }
-    } else if cfg!(target_arch = "aarch64") {
-        "linux-gcc-arm64"
-    } else {
-        "linux-gcc-x64"
     }
 }
 
