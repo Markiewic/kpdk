@@ -50,7 +50,7 @@ fn write(path: &Path, content: &str) -> Result<()> {
 const MAIN_C: &str = r#"#include <pdk/device.h>
 #include <pdk/sysclock.h>
 
-unsigned char _sdcc_external_startup(void)
+unsigned char __sdcc_external_startup(void)
 {
     /* Configure the clock explicitly for your device before using timing code. */
     return 0;
@@ -75,7 +75,8 @@ mod tests {
 
         run("firmware", "PFS154", 8_000_000, 5_000).unwrap();
         assert!(temp.path().join("firmware/pdk.toml").is_file());
-        assert!(temp.path().join("firmware/src/main.c").is_file());
+        let main_c = fs::read_to_string(temp.path().join("firmware/src/main.c")).unwrap();
+        assert!(main_c.contains("unsigned char __sdcc_external_startup(void)"));
         assert!(temp
             .path()
             .join("firmware/.vscode/c_cpp_properties.json")
