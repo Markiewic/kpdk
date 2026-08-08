@@ -83,12 +83,7 @@ fn run_inner(root: &Path, release: bool, capture_output: bool) -> Result<Artifac
         ihx.as_os_str().to_owned(),
     ];
     link_args.extend(objects.iter().map(|path| path.as_os_str().to_owned()));
-    run_sdcc(
-        &toolchain,
-        link_args,
-        capture_output,
-        &mut diagnostics,
-    )?;
+    run_sdcc(&toolchain, link_args, capture_output, &mut diagnostics)?;
 
     let makebin_args = vec![
         OsString::from("-p"),
