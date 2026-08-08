@@ -126,9 +126,40 @@ kpdk clean
 kpdk doctor
 kpdk probe
 kpdk flash [--port COM5]
+kpdk vscode [--project <path>]
 ```
 
 `kpdk flash` asks for explicit confirmation before writing an OTP `PMS` device.
+
+## VS Code
+
+`kpdk new` creates ready-to-use VS Code integration from `pdk.toml` and the
+discovered SDK. Open the project folder and accept the recommended Microsoft
+C/C++ extension; free-pdk headers, completion, navigation, and build diagnostics
+work without configuring include paths by hand.
+
+Generated integration includes:
+
+- `.vscode/c_cpp_properties.json` with the SDK include path, selected device,
+  `F_CPU`, and `TARGET_VDD_MV`;
+- `.vscode/kpdk-intellisense.h` to make SDCC-only storage classes and inline
+  assembly understandable to the Microsoft C/C++ parser without affecting builds;
+- `.vscode/tasks.json` with build, release build, flash, and refresh tasks plus
+  an SDCC problem matcher;
+- `.vscode/extensions.json` recommending `ms-vscode.cpptools`;
+- `compile_commands.json` describing the SDCC compilation arguments for other
+  editor tooling.
+
+The machine-specific `c_cpp_properties.json` and `compile_commands.json` are
+gitignored. After cloning a project, changing the MCU/clock/voltage, or switching
+SDK locations, regenerate them with:
+
+```bash
+kpdk vscode
+```
+
+Microsoft C/C++ uses a GCC/Clang-compatible parser rather than SDCC itself, so
+`kpdk build` remains authoritative for compiler diagnostics.
 
 ## Development
 
@@ -148,4 +179,3 @@ Linux x64, and Linux ARM64.
 - macOS SDK bundle
 - WinGet and Scoop packages
 - Complete, generated device database
-- VS Code configuration and examples
