@@ -49,7 +49,29 @@ fn cpp_properties(config: &ProjectFile) -> String {
     let configurations = [
         (
             "Win32",
-            format!("{\n  \"configurations\": [\n{configurations}\n  ],\n  \"version\": 4\n}\n")
+            format!(
+                "${{env:LOCALAPPDATA}}/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+        (
+            "Linux",
+            format!(
+                "${{env:HOME}}/.local/share/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+        (
+            "Mac",
+            format!(
+                "${{env:HOME}}/Library/Application Support/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+            ),
+        ),
+    ]
+    .into_iter()
+    .map(|(name, include)| cpp_configuration(config, name, &include))
+    .collect::<Vec<_>>()
+    .join(",\\n");
+
+    format!("{\\n  \\\"configurations\\\": [\\n{configurations}\\n  ],\\n  \\\"version\\\": 4\\n}\\n")
 }
 
 fn cpp_configuration(config: &ProjectFile, name: &str, include: &str) -> String {
