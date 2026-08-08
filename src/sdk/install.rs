@@ -95,10 +95,7 @@ fn remove_legacy_programmer(root: &Path) -> Result<()> {
             source,
         })?;
         if entries.next().is_none() {
-            fs::remove_dir(&bin).map_err(|source| Error::Write {
-                path: bin,
-                source,
-            })?;
+            fs::remove_dir(&bin).map_err(|source| Error::Write { path: bin, source })?;
         }
     }
 
@@ -229,7 +226,6 @@ fn executable(directory: &Path, name: &str) -> PathBuf {
         name.to_owned()
     })
 }
-
 
 #[cfg(test)]
 mod tests {
