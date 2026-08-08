@@ -229,3 +229,27 @@ fn executable(directory: &Path, name: &str) -> PathBuf {
         name.to_owned()
     })
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn removes_only_legacy_programmer_files() {
+        let temp = tempfile::tempdir().unwrap();
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fs::write(bin.join("easypdkprog"), b"legacy").unwrap();
+        fs::write(bin.join("easypdkprog.exe"), b"legacy").unwrap();
+        fs::write(bin.join("easypdkprog-LICENSE"), b"legacy").unwrap();
+        fs::write(bin.join("keep.txt"), b"user-owned").unwrap();
+
+        remove_legacy_programmer(temp.path()).unwrap();
+
+        assert!(!bin.join("easypdkprog").exists());
+        assert!(!bin.join("easypdkprog.exe").exists());
+        assert!(!bin.join("easypdkprog-LICENSE").exists());
+        assert_eq!(fs::read(bin.join("keep.txt")).unwrap(), b"user-owned");
+    }
+}
