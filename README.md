@@ -49,7 +49,8 @@ kpdk flash
 ```
 
 `kpdk sdk install` installs a relocatable SDCC toolchain, `pdk-includes`,
-and `easy-pdk-includes` into the user's local application data directory.
+`easy-pdk-includes`, and reusable helper headers from `free-pdk-examples` into
+the user's local application data directory.
 Every downloaded file is verified against a pinned SHA-256 checksum. The header
 packages are pinned to exact upstream Git commits and recorded in
 `manifest.toml`.
@@ -63,6 +64,13 @@ packages are pinned to exact upstream Git commits and recorded in
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
   [easy-pdk-includes](https://github.com/free-pdk/easy-pdk-includes).
+- `auto_sysclock.h`, `delay.h`, `millis.h`, `serial.h`, and `startup.h` are
+  downloaded directly from a pinned
+  [free-pdk-examples](https://github.com/free-pdk/free-pdk-examples) commit and
+  installed at the SDK include root, preserving the include style used by the
+  upstream examples (for example, `#include "delay.h"`). The upstream examples
+  repository currently has no repository-wide license, so kpdk does not vendor
+  these helper sources.
 - Windows and Linux release archives also contain Easy PDK Programmer 1.3 next
   to `kpdk`. Linux x64/ARM64 binaries are built from the pinned upstream tag;
   Windows uses the official upstream release binary verified by SHA-256.
@@ -103,9 +111,14 @@ toolchains/2026.1/
     ├── pdk/
     │   ├── device.h
     │   └── device/
-    └── easy-pdk/
-        ├── calibrate.h
-        └── serial_num.h
+    ├── easy-pdk/
+    │   ├── calibrate.h
+    │   └── serial_num.h
+    ├── auto_sysclock.h
+    ├── delay.h
+    ├── millis.h
+    ├── serial.h
+    └── startup.h
 ```
 
 Executable names have an `.exe` suffix on Windows. Easy PDK Programmer is
