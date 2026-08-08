@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod device;
 mod error;
+mod mcp;
 mod process;
 mod sdk;
 mod toolchain;
@@ -51,6 +52,8 @@ enum Command {
     },
     /// Check the host and free-pdk toolchain.
     Doctor,
+    /// Run the local MCP server over stdio.
+    Mcp,
     /// Ask Easy PDK Programmer to detect the connected IC.
     Probe,
     /// Build and program the current project.
@@ -92,6 +95,7 @@ fn run() -> Result<()> {
         Command::Build { project, release } => build::run(&project, release).map(|_| ()),
         Command::Clean { project } => clean::run(&project),
         Command::Doctor => doctor::run(),
+        Command::Mcp => mcp::run(),
         Command::Probe => probe::run(),
         Command::Flash { project, port, yes } => flash::run(&project, port.as_deref(), yes),
         Command::Vscode { project } => vscode::run(&project),
