@@ -92,10 +92,16 @@ fn compile_commands(
     for source in &config.build.sources {
         let source_path = root.join(source);
         let source_path = absolute_path(&source_path);
-        let object = absolute_path(&root
-            .join("build")
-            .join(source_path.file_stem().unwrap_or_else(|| OsStr::new("source")))
-            .with_extension("rel"));
+        let object = absolute_path(
+            &root
+                .join("build")
+                .join(
+                    source_path
+                        .file_stem()
+                        .unwrap_or_else(|| OsStr::new("source")),
+                )
+                .with_extension("rel"),
+        );
         let mut arguments = vec![
             toolchain.sdcc.clone(),
             format!("-m{sdcc_target}"),
