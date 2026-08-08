@@ -92,6 +92,18 @@ mod tests {
             .is_file());
         assert!(temp.path().join("firmware/compile_commands.json").is_file());
 
+        let gitignore = fs::read_to_string(temp.path().join("firmware/.gitignore")).unwrap();
+        assert!(!gitignore.contains("c_cpp_properties.json"));
+
+        let cpp_properties =
+            fs::read_to_string(temp.path().join("firmware/.vscode/c_cpp_properties.json")).unwrap();
+        assert!(cpp_properties.contains("\"name\": \"Win32\""));
+        assert!(cpp_properties.contains("\"name\": \"Linux\""));
+        assert!(cpp_properties.contains("\"name\": \"Mac\""));
+        assert!(cpp_properties.contains("${env:LOCALAPPDATA}"));
+        assert!(cpp_properties.contains("${env:HOME}"));
+        assert!(cpp_properties.contains("${default}"));
+
         std::env::set_current_dir(previous).unwrap();
     }
 }
