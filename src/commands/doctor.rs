@@ -21,6 +21,11 @@ pub fn run() -> Result<()> {
     let include_checks = [
         ("pdk-includes", "pdk/device.h"),
         ("easy-pdk", "easy-pdk/calibrate.h"),
+        ("auto-sysclock", "auto_sysclock.h"),
+        ("delay", "delay.h"),
+        ("millis", "millis.h"),
+        ("serial", "serial.h"),
+        ("startup", "startup.h"),
     ];
     match tools.include {
         Some(path) => {

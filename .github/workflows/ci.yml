@@ -35,6 +35,8 @@ jobs:
           test ! -e "$HOME/.local/share/kpdk/toolchains/2026.1/bin/easypdkprog"
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
+          sed -i '1i#include "delay.h"' smoke/src/main.c
+          sed -i '/while (1) {/a\        _delay_ms(1);' smoke/src/main.c
           python3 -m json.tool smoke/.vscode/c_cpp_properties.json >/dev/null
           python3 -m json.tool smoke/.vscode/tasks.json >/dev/null
           python3 -m json.tool smoke/.vscode/extensions.json >/dev/null
