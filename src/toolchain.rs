@@ -1,6 +1,8 @@
 use std::env;
 use std::path::{Path, PathBuf};
 
+pub const TOOLCHAIN_VERSION: &str = "2026.1";
+
 pub struct Toolchain {
     pub sdcc: String,
     pub sdcc_compiler_path: Option<PathBuf>,
@@ -56,7 +58,7 @@ fn programmer_executable() -> String {
 }
 
 pub fn default_sdk_root() -> Option<PathBuf> {
-    dirs::data_local_dir().map(|root| root.join("kpdk").join("toolchains").join("2026.1"))
+    dirs::data_local_dir().map(|root| root.join("kpdk").join("toolchains").join(TOOLCHAIN_VERSION))
 }
 
 fn executable(directory: &Path, name: &str) -> String {
