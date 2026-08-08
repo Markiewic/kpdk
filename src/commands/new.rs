@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use crate::commands::vscode;
 use crate::device;
 use crate::error::{Error, Result};
 
@@ -27,7 +28,11 @@ pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
         ),
     )?;
     write(&root.join("src/main.c"), MAIN_C)?;
-    write(&root.join(".gitignore"), "/build/\n")?;
+    write(
+        &root.join(".gitignore"),
+        "/build/\n/compile_commands.json\n/.vscode/c_cpp_properties.json\n",
+    )?;
+    vscode::run(root)?;
 
     println!("Created `{name}` for {}", device_name.to_ascii_uppercase());
     println!("  cd {name}");
@@ -71,6 +76,20 @@ mod tests {
         run("firmware", "PFS154", 8_000_000, 5_000).unwrap();
         assert!(temp.path().join("firmware/pdk.toml").is_file());
         assert!(temp.path().join("firmware/src/main.c").is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/c_cpp_properties.json")
+            .is_file());
+        assert!(temp.path().join("firmware/.vscode/tasks.json").is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/extensions.json")
+            .is_file());
+        assert!(temp
+            .path()
+            .join("firmware/.vscode/kpdk-intellisense.h")
+            .is_file());
+        assert!(temp.path().join("firmware/compile_commands.json").is_file());
 
         std::env::set_current_dir(previous).unwrap();
     }

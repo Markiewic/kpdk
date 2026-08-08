@@ -34,6 +34,11 @@ jobs:
           cargo run -- sdk install
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
+          python3 -m json.tool smoke/.vscode/c_cpp_properties.json >/dev/null
+          python3 -m json.tool smoke/.vscode/tasks.json >/dev/null
+          python3 -m json.tool smoke/.vscode/extensions.json >/dev/null
+          python3 -m json.tool smoke/compile_commands.json >/dev/null
+          test -f smoke/.vscode/kpdk-intellisense.h
           cargo run -- build --project smoke --release
 
   platform-sdk:
@@ -80,6 +85,21 @@ jobs:
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
           cargo run -- build --project smoke --release
+
+      - name: Validate generated VS Code integration (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Get-Content smoke/.vscode/c_cpp_properties.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content smoke/.vscode/tasks.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content smoke/.vscode/extensions.json -Raw | ConvertFrom-Json | Out-Null
+          Get-Content smoke/compile_commands.json -Raw | ConvertFrom-Json | Out-Null
+          if (-not (Test-Path smoke/.vscode/kpdk-intellisense.h)) {
+            throw "missing IntelliSense compatibility header"
+          }
+          if (-not (Select-String -Path smoke/.vscode/c_cpp_properties.json -SimpleMatch "toolchains")) {
+            throw "VS Code includePath does not point at the installed kpdk SDK"
+          }
 
   macos-test:
     name: Test (macos-latest)

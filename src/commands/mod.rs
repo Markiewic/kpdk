@@ -4,3 +4,4 @@ pub mod doctor;
 pub mod flash;
 pub mod new;
 pub mod probe;
+pub mod vscode;
