@@ -71,7 +71,7 @@ fn cpp_properties(config: &ProjectFile) -> String {
     .collect::<Vec<_>>()
     .join(",\n");
 
-    format!("{\n  \"configurations\": [\n{configurations}\n  ],\n  \"version\": 4\n}\n")
+    format!("{{\n  \"configurations\": [\n{configurations}\n  ],\n  \"version\": 4\n}}\n")
 }
 
 fn cpp_configuration(config: &ProjectFile, name: &str, include: &str) -> String {
