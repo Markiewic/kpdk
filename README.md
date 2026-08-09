@@ -49,7 +49,8 @@ kpdk flash
 ```
 
 `kpdk sdk install` installs a relocatable SDCC toolchain, `pdk-includes`,
-and `easy-pdk-includes` into the user's local application data directory.
+`easy-pdk-includes`, and a pinned reference snapshot of `free-pdk-examples`
+into the user's local application data directory.
 Every downloaded file is verified against a pinned SHA-256 checksum. The header
 packages are pinned to exact upstream Git commits and recorded in
 `manifest.toml`.
@@ -63,6 +64,11 @@ packages are pinned to exact upstream Git commits and recorded in
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
   [easy-pdk-includes](https://github.com/free-pdk/easy-pdk-includes).
+- All platforms receive a pinned, SHA-256-verified snapshot of
+  [free-pdk-examples](https://github.com/free-pdk/free-pdk-examples), plus a
+  topic index for agents and editor tooling. The snapshot is downloaded directly
+  from upstream rather than redistributed in kpdk release archives because the
+  upstream repository currently has no explicit license file.
 - Windows and Linux release archives also contain Easy PDK Programmer 1.3 next
   to `kpdk`. Linux x64/ARM64 binaries are built from the pinned upstream tag;
   Windows uses the official upstream release binary verified by SHA-256.
@@ -99,13 +105,19 @@ toolchains/2026.1/
 │   │   └── makebin
 │   ├── include/
 │   └── lib/
-└── include/
-    ├── pdk/
-    │   ├── device.h
-    │   └── device/
-    └── easy-pdk/
-        ├── calibrate.h
-        └── serial_num.h
+├── include/
+│   ├── pdk/
+│   │   ├── device.h
+│   │   └── device/
+│   └── easy-pdk/
+│       ├── calibrate.h
+│       └── serial_num.h
+└── examples/
+    ├── index.toml
+    └── upstream/
+        ├── BlinkLED/
+        ├── FadeLED/
+        └── ...
 ```
 
 Executable names have an `.exe` suffix on Windows. Easy PDK Programmer is
@@ -113,6 +125,12 @@ discovered independently from the SDK: `KPDK_EASYPDKPROG` takes precedence,
 then a copy next to the running `kpdk` executable, then `easypdkprog` from
 `PATH`. If SDCC is already in `PATH`, set only `KPDK_INCLUDE_DIR` to the
 free-pdk include directory.
+
+The generated project `AGENTS.md` tells coding agents to consult
+`examples/index.toml` and the relevant upstream source before implementing
+hardware-specific behavior. Examples are references, not drop-in templates:
+their MCU, registers, pins, clock, voltage, and polarity must be checked against
+the current project.
 
 ## Commands
 
