@@ -49,38 +49,50 @@ fn cpp_properties(config: &ProjectFile) -> String {
     let configurations = [
         (
             "Win32",
-            format!(
-                "${{env:LOCALAPPDATA}}/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
-            ),
+            format!("${{env:LOCALAPPDATA}}/kpdk/toolchains/{TOOLCHAIN_VERSION}"),
         ),
         (
             "Linux",
-            format!(
-                "${{env:HOME}}/.local/share/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
-            ),
+            format!("${{env:HOME}}/.local/share/kpdk/toolchains/{TOOLCHAIN_VERSION}"),
         ),
         (
             "Mac",
             format!(
-                "${{env:HOME}}/Library/Application Support/kpdk/toolchains/{TOOLCHAIN_VERSION}/include"
+                "${{env:HOME}}/Library/Application Support/kpdk/toolchains/{TOOLCHAIN_VERSION}"
             ),
         ),
     ]
     .into_iter()
-    .map(|(name, include)| cpp_configuration(config, name, &include))
+    .map(|(name, sdk_root)| {
+        let (include, sdcc_include) = include_paths(&sdk_root);
+        cpp_configuration(config, name, &include, &sdcc_include)
+    })
     .collect::<Vec<_>>()
     .join(",\n");
 
     format!("{{\n  \"configurations\": [\n{configurations}\n  ],\n  \"version\": 4\n}}\n")
 }
 
-fn cpp_configuration(config: &ProjectFile, name: &str, include: &str) -> String {
+fn include_paths(sdk_root: &str) -> (String, String) {
+    (
+        format!("{sdk_root}/include"),
+        format!("{sdk_root}/sdcc/include"),
+    )
+}
+
+fn cpp_configuration(
+    config: &ProjectFile,
+    name: &str,
+    include: &str,
+    sdcc_include: &str,
+) -> String {
     format!(
         r#"    {{
       "name": {name},
       "includePath": [
         "${{workspaceFolder}}/src",
-        {include}
+        {include},
+        {sdcc_include}
       ],
       "defines": [
         {device},
@@ -96,6 +108,7 @@ fn cpp_configuration(config: &ProjectFile, name: &str, include: &str) -> String 
     }}"#,
         name = json_string(name),
         include = json_string(include),
+        sdcc_include = json_string(sdcc_include),
         device = json_string(&config.project.device.to_ascii_uppercase()),
         clock = json_string(&format!("F_CPU={}", config.project.clock_hz)),
         vdd = json_string(&format!("TARGET_VDD_MV={}", config.project.target_vdd_mv)),
@@ -296,6 +309,17 @@ mod tests {
         assert_eq!(
             json_string(r#"C:\Users\Test\"sdk"#),
             r#""C:\\Users\\Test\\\"sdk""#
+        );
+    }
+
+    #[test]
+    fn includes_project_and_sdcc_headers_from_sdk_root() {
+        assert_eq!(
+            include_paths(r#"${env:LOCALAPPDATA}/kpdk/toolchains/2026.1"#),
+            (
+                r#"${env:LOCALAPPDATA}/kpdk/toolchains/2026.1/include"#.into(),
+                r#"${env:LOCALAPPDATA}/kpdk/toolchains/2026.1/sdcc/include"#.into(),
+            )
         );
     }
 }
