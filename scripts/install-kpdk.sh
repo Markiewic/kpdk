@@ -57,4 +57,19 @@ echo "Installed kpdk and easypdkprog in $install_dir"
 if [[ ":$PATH:" != *":$install_dir:"* ]]; then
   echo "Restart your shell or run: export PATH=\"$install_dir:\$PATH\""
 fi
-echo "Next: kpdk sdk install"
+if [[ -r /dev/tty && -w /dev/tty ]]; then
+  printf "The SDK is required to build Padauk projects. Install it now? [Y/n] " > /dev/tty
+  if ! read -r install_sdk < /dev/tty; then
+    install_sdk=""
+  fi
+  case "$install_sdk" in
+    ""|y|Y|yes|YES|Yes)
+      "$install_dir/kpdk" sdk install
+      ;;
+    *)
+      echo "SDK installation skipped. Install it before your first build with: kpdk sdk install"
+      ;;
+  esac
+else
+  echo "No interactive terminal detected. Install the SDK before your first build with: kpdk sdk install"
+fi
