@@ -6,7 +6,7 @@ use crate::device;
 use crate::error::{Error, Result};
 
 pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
-    device::architecture(device_name)?;
+    let architecture = device::architecture(device_name)?;
     let root = Path::new(name);
     if root.exists() {
         return Err(Error::Message(format!(
@@ -33,6 +33,10 @@ pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
         &project_readme(name, device_name, clock, vdd),
     )?;
     write(
+        &root.join("AGENTS.md"),
+        &project_agents(device_name, architecture.sdcc_target(), clock, vdd),
+    )?;
+    write(
         &root.join(".gitignore"),
         "/build/\n/compile_commands.json\n",
     )?;
@@ -42,6 +46,60 @@ pub fn run(name: &str, device_name: &str, clock: u32, vdd: u16) -> Result<()> {
     println!("  cd {name}");
     println!("  kpdk build");
     Ok(())
+}
+
+fn project_agents(device_name: &str, architecture: &str, clock: u32, vdd: u16) -> String {
+    format!(
+        r#"# AGENTS.md
+
+## Project
+
+- Target device: `{device}`
+- SDCC architecture: `{architecture}`
+- Clock: `{clock} Hz`
+- Target VDD: `{vdd} mV`
+- Firmware entry point: `src/main.c`
+- Project configuration: `pdk.toml`
+
+## Commands
+
+Install and verify the toolchain before the first build:
+
+```sh
+kpdk sdk install
+kpdk doctor
+```
+
+Build and validate firmware with:
+
+```sh
+kpdk build
+kpdk build --release
+```
+
+Run `kpdk vscode` after changing the MCU, clock, VDD, SDK location, or editor configuration.
+
+## Firmware rules
+
+- Build with `kpdk`; do not substitute GCC or Clang for SDCC.
+- Treat diagnostics from `kpdk build` and SDCC as authoritative.
+- Use register names, macros, and headers provided by the installed Padauk SDK.
+- Do not invent Arduino APIs, undocumented registers, device aliases, or header names.
+- Do not change the target MCU, clock, VDD, pin assignments, or signal polarity without explicit confirmation.
+- Keep hardware-specific assumptions visible in code comments and task summaries.
+- Run `kpdk build` after every firmware change and report any remaining warnings.
+- Do not edit generated files in `build/` or `compile_commands.json` by hand.
+
+## Hardware safety
+
+- A successful build verifies compilation only; it does not prove behavior on physical hardware.
+- Never run `kpdk flash` unless the user explicitly requests physical programming.
+- Before flashing an M-series OTP device, warn that it cannot be erased or reprogrammed.
+- Flag oscillator-calibration placeholders and state the calibration voltage.
+- For LEDs, use a current-limiting resistor and state whether the GPIO sources or sinks current.
+"#,
+        device = device_name.to_ascii_uppercase()
+    )
 }
 
 fn project_readme(name: &str, device_name: &str, clock: u32, vdd: u16) -> String {
@@ -184,6 +242,14 @@ mod tests {
         assert!(readme.contains("kpdk build --release"));
         assert!(readme.contains("src/main.c"));
         assert!(readme.contains("Visual Studio Code"));
+        let agents = fs::read_to_string(temp.path().join("firmware/AGENTS.md")).unwrap();
+        assert!(agents.contains("Target device: `PFS154`"));
+        assert!(agents.contains("SDCC architecture: `pdk14`"));
+        assert!(agents.contains("Clock: `8000000 Hz`"));
+        assert!(agents.contains("Target VDD: `5000 mV`"));
+        assert!(agents.contains("kpdk build --release"));
+        assert!(agents.contains("Never run `kpdk flash`"));
+        assert!(agents.contains("OTP device"));
         let main_c = fs::read_to_string(temp.path().join("firmware/src/main.c")).unwrap();
         assert!(main_c.contains("unsigned char __sdcc_external_startup(void)"));
         assert!(temp
