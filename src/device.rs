@@ -17,17 +17,32 @@ impl Architecture {
     }
 }
 
+const SUPPORTED_DEVICES: &[(&str, Architecture)] = &[
+    ("PMS150C", Architecture::Pdk13),
+    ("PMS15A", Architecture::Pdk13),
+    ("PFS154", Architecture::Pdk14),
+    ("PFS172", Architecture::Pdk14),
+    ("PMS152", Architecture::Pdk14),
+    ("PMS154C", Architecture::Pdk14),
+    ("PMS171B", Architecture::Pdk14),
+    ("PFS173", Architecture::Pdk15),
+];
+
+pub fn supported_devices() -> impl Iterator<Item = (&'static str, Architecture)> {
+    SUPPORTED_DEVICES.iter().copied()
+}
+
 pub fn architecture(device: &str) -> Result<Architecture> {
-    match device.to_ascii_uppercase().as_str() {
-        "PMS150C" | "PMS15A" => Ok(Architecture::Pdk13),
-        "PFS154" | "PFS172" | "PMS152" | "PMS154C" | "PMS171B" => {
-            Ok(Architecture::Pdk14)
-        }
-        "PFS173" => Ok(Architecture::Pdk15),
-        other => Err(Error::Message(format!(
-            "unsupported device `{other}`; the initial device table must be extended before building it"
-        ))),
-    }
+    let normalized = device.to_ascii_uppercase();
+    SUPPORTED_DEVICES
+        .iter()
+        .find(|(name, _)| *name == normalized.as_str())
+        .map(|(_, architecture)| *architecture)
+        .ok_or_else(|| {
+            Error::Message(format!(
+                "unsupported device `{normalized}`; the initial device table must be extended before building it"
+            ))
+        })
 }
 
 pub fn is_otp(device: &str) -> bool {
@@ -46,5 +61,12 @@ mod tests {
     #[test]
     fn device_lookup_is_case_insensitive() {
         assert_eq!(architecture("pms150c").unwrap(), Architecture::Pdk13);
+    }
+
+    #[test]
+    fn supported_device_table_matches_lookup() {
+        for (name, expected) in supported_devices() {
+            assert_eq!(architecture(name).unwrap(), expected);
+        }
     }
 }

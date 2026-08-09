@@ -122,12 +122,40 @@ kpdk new <name> --device <device>
 kpdk build [--release]
 kpdk clean
 kpdk doctor
+kpdk mcp
 kpdk probe
 kpdk flash [--port COM5]
 kpdk vscode [--project <path>]
 ```
 
 `kpdk flash` asks for explicit confirmation before writing an OTP `PMS` device.
+
+## MCP
+
+`kpdk mcp` runs a local Model Context Protocol server over stdio. MCP clients can
+launch the installed CLI directly:
+
+```json
+{
+  "mcpServers": {
+    "kpdk": {
+      "command": "kpdk",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+The initial server exposes two tools:
+
+- `get_supported_devices` returns the exact device table and SDCC architecture
+  known by the installed kpdk version.
+- `build_project` builds an existing project through the same build core as
+  `kpdk build` and returns structured IHX/BIN paths, compiler diagnostics, and
+  errors without writing non-protocol data to stdout.
+
+Flashing is intentionally not exposed through MCP. Programming an OTP device
+remains an explicit CLI action.
 
 ## VS Code
 
