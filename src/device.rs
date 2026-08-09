@@ -24,14 +24,46 @@ pub struct Device {
 }
 
 const DEVICES: &[Device] = &[
-    Device { name: "PMS150C", architecture: Architecture::Pdk13, otp: true },
-    Device { name: "PMS15A", architecture: Architecture::Pdk13, otp: true },
-    Device { name: "PFS154", architecture: Architecture::Pdk14, otp: false },
-    Device { name: "PFS172", architecture: Architecture::Pdk14, otp: false },
-    Device { name: "PMS152", architecture: Architecture::Pdk14, otp: true },
-    Device { name: "PMS154C", architecture: Architecture::Pdk14, otp: true },
-    Device { name: "PMS171B", architecture: Architecture::Pdk14, otp: true },
-    Device { name: "PFS173", architecture: Architecture::Pdk15, otp: false },
+    Device {
+        name: "PMS150C",
+        architecture: Architecture::Pdk13,
+        otp: true,
+    },
+    Device {
+        name: "PMS15A",
+        architecture: Architecture::Pdk13,
+        otp: true,
+    },
+    Device {
+        name: "PFS154",
+        architecture: Architecture::Pdk14,
+        otp: false,
+    },
+    Device {
+        name: "PFS172",
+        architecture: Architecture::Pdk14,
+        otp: false,
+    },
+    Device {
+        name: "PMS152",
+        architecture: Architecture::Pdk14,
+        otp: true,
+    },
+    Device {
+        name: "PMS154C",
+        architecture: Architecture::Pdk14,
+        otp: true,
+    },
+    Device {
+        name: "PMS171B",
+        architecture: Architecture::Pdk14,
+        otp: true,
+    },
+    Device {
+        name: "PFS173",
+        architecture: Architecture::Pdk15,
+        otp: false,
+    },
 ];
 
 pub fn supported_devices() -> &'static [Device] {
@@ -51,7 +83,11 @@ pub fn architecture(device: &str) -> Result<Architecture> {
 
 pub fn is_otp(device: &str) -> bool {
     let normalized = device.to_ascii_uppercase();
-    DEVICES.iter().find(|item| item.name == normalized).map(|item| item.otp).unwrap_or(false)
+    DEVICES
+        .iter()
+        .find(|item| item.name == normalized)
+        .map(|item| item.otp)
+        .unwrap_or(false)
 }
 
 #[cfg(test)]

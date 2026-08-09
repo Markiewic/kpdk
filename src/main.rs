@@ -83,8 +83,15 @@ enum SdkCommand {
 
 fn run() -> Result<()> {
     match Cli::parse().command {
-        Command::Sdk { command: SdkCommand::Install { force } } => install::run(force),
-        Command::New { name, device, clock, vdd } => new::run(&name, &device, clock, vdd),
+        Command::Sdk {
+            command: SdkCommand::Install { force },
+        } => install::run(force),
+        Command::New {
+            name,
+            device,
+            clock,
+            vdd,
+        } => new::run(&name, &device, clock, vdd),
         Command::Build { project, release } => {
             let artifacts = build::run(&project, release)?;
             build::print_artifacts(&artifacts);

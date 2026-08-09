@@ -36,7 +36,10 @@ pub fn run() -> Result<()> {
         let request: Request = match serde_json::from_str(&line) {
             Ok(request) => request,
             Err(error) => {
-                write_message(&mut output, &error_response(Value::Null, -32700, error.to_string()))?;
+                write_message(
+                    &mut output,
+                    &error_response(Value::Null, -32700, error.to_string()),
+                )?;
                 continue;
             }
         };
@@ -97,8 +100,14 @@ fn tool_definitions() -> Value {
 }
 
 fn tool_call_response(id: Value, params: &Value) -> Value {
-    let name = params.get("name").and_then(Value::as_str).unwrap_or_default();
-    let arguments = params.get("arguments").cloned().unwrap_or_else(|| json!({}));
+    let name = params
+        .get("name")
+        .and_then(Value::as_str)
+        .unwrap_or_default();
+    let arguments = params
+        .get("arguments")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
     let result = match call_tool(name, &arguments) {
         Ok(value) => json!({
             "content": [{ "type": "text", "text": value.to_string() }],
@@ -126,8 +135,13 @@ fn call_tool(name: &str, arguments: &Value) -> Result<Value> {
             let project = arguments
                 .get("project")
                 .and_then(Value::as_str)
-                .ok_or_else(|| Error::Message("build_project requires string argument `project`".into()))?;
-            let release = arguments.get("release").and_then(Value::as_bool).unwrap_or(false);
+                .ok_or_else(|| {
+                    Error::Message("build_project requires string argument `project`".into())
+                })?;
+            let release = arguments
+                .get("release")
+                .and_then(Value::as_bool)
+                .unwrap_or(false);
             let root = PathBuf::from(project);
             let config = ProjectFile::load(&root)?;
             let artifacts = build::run(&root, release)?;
@@ -147,7 +161,10 @@ fn call_tool(name: &str, arguments: &Value) -> Result<Value> {
 }
 
 fn absolute(path: &std::path::Path) -> String {
-    path.canonicalize().unwrap_or_else(|_| path.to_owned()).to_string_lossy().into_owned()
+    path.canonicalize()
+        .unwrap_or_else(|_| path.to_owned())
+        .to_string_lossy()
+        .into_owned()
 }
 
 fn error_response(id: Value, code: i32, message: String) -> Value {
