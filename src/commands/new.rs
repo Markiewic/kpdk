@@ -63,7 +63,8 @@ fn project_agents(device_name: &str, architecture: &str, clock: u32, vdd: u16) -
 
 ## Commands
 
-Install and verify the toolchain before the first build:
+The kpdk installer normally installs the required SDK during setup. Before the
+first build, verify the toolchain; if SDK installation was skipped, install it:
 
 ```sh
 kpdk sdk install
@@ -126,14 +127,15 @@ curl -fsSL https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/install
 
 You can also download the complete bundle from the [latest kpdk release](https://github.com/Markiewic/kpdk/releases/latest).
 
-### 2. Install the SDK
+### 2. Verify the SDK
+
+The kpdk installer offers to install the required SDK immediately. If that step
+was skipped, install it now, then verify the toolchain:
 
 ```bash
 kpdk sdk install
 kpdk doctor
 ```
-
-This installs the SDCC toolchain and the free-pdk headers used by the project.
 
 ### 3. Build
 
