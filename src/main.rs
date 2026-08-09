@@ -2,6 +2,7 @@ mod commands;
 mod config;
 mod device;
 mod error;
+mod mcp;
 mod process;
 mod sdk;
 mod toolchain;
@@ -67,6 +68,8 @@ enum Command {
         #[arg(long, default_value = ".")]
         project: PathBuf,
     },
+    /// Run the local MCP server over stdio.
+    Mcp,
 }
 
 #[derive(Subcommand)]
@@ -80,21 +83,19 @@ enum SdkCommand {
 
 fn run() -> Result<()> {
     match Cli::parse().command {
-        Command::Sdk {
-            command: SdkCommand::Install { force },
-        } => install::run(force),
-        Command::New {
-            name,
-            device,
-            clock,
-            vdd,
-        } => new::run(&name, &device, clock, vdd),
-        Command::Build { project, release } => build::run(&project, release).map(|_| ()),
+        Command::Sdk { command: SdkCommand::Install { force } } => install::run(force),
+        Command::New { name, device, clock, vdd } => new::run(&name, &device, clock, vdd),
+        Command::Build { project, release } => {
+            let artifacts = build::run(&project, release)?;
+            build::print_artifacts(&artifacts);
+            Ok(())
+        }
         Command::Clean { project } => clean::run(&project),
         Command::Doctor => doctor::run(),
         Command::Probe => probe::run(),
         Command::Flash { project, port, yes } => flash::run(&project, port.as_deref(), yes),
         Command::Vscode { project } => vscode::run(&project),
+        Command::Mcp => mcp::run(),
     }
 }
 

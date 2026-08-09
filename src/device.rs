@@ -17,21 +17,41 @@ impl Architecture {
     }
 }
 
+pub struct Device {
+    pub name: &'static str,
+    pub architecture: Architecture,
+    pub otp: bool,
+}
+
+const DEVICES: &[Device] = &[
+    Device { name: "PMS150C", architecture: Architecture::Pdk13, otp: true },
+    Device { name: "PMS15A", architecture: Architecture::Pdk13, otp: true },
+    Device { name: "PFS154", architecture: Architecture::Pdk14, otp: false },
+    Device { name: "PFS172", architecture: Architecture::Pdk14, otp: false },
+    Device { name: "PMS152", architecture: Architecture::Pdk14, otp: true },
+    Device { name: "PMS154C", architecture: Architecture::Pdk14, otp: true },
+    Device { name: "PMS171B", architecture: Architecture::Pdk14, otp: true },
+    Device { name: "PFS173", architecture: Architecture::Pdk15, otp: false },
+];
+
+pub fn supported_devices() -> &'static [Device] {
+    DEVICES
+}
+
 pub fn architecture(device: &str) -> Result<Architecture> {
-    match device.to_ascii_uppercase().as_str() {
-        "PMS150C" | "PMS15A" => Ok(Architecture::Pdk13),
-        "PFS154" | "PFS172" | "PMS152" | "PMS154C" | "PMS171B" => {
-            Ok(Architecture::Pdk14)
-        }
-        "PFS173" => Ok(Architecture::Pdk15),
-        other => Err(Error::Message(format!(
-            "unsupported device `{other}`; the initial device table must be extended before building it"
-        ))),
-    }
+    let normalized = device.to_ascii_uppercase();
+    DEVICES
+        .iter()
+        .find(|item| item.name == normalized)
+        .map(|item| item.architecture)
+        .ok_or_else(|| Error::Message(format!(
+            "unsupported device `{normalized}`; the initial device table must be extended before building it"
+        )))
 }
 
 pub fn is_otp(device: &str) -> bool {
-    device.to_ascii_uppercase().starts_with("PMS")
+    let normalized = device.to_ascii_uppercase();
+    DEVICES.iter().find(|item| item.name == normalized).map(|item| item.otp).unwrap_or(false)
 }
 
 #[cfg(test)]
