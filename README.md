@@ -40,7 +40,6 @@ already present in `PATH`. Do not copy only the `kpdk` executable:
 ## Quick start
 
 ```bash
-kpdk sdk install
 kpdk new blink --device PFS154
 cd blink
 kpdk doctor
