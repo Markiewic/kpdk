@@ -32,6 +32,8 @@ jobs:
           KPDK_EASYPDKPROG: ${{ runner.temp }}/easypdkprog
         run: |
           cargo run -- sdk install
+          test -f "$HOME/.local/share/kpdk/toolchains/2026.1/examples/index.toml"
+          test -f "$HOME/.local/share/kpdk/toolchains/2026.1/examples/upstream/BlinkLED/main.c"
           test ! -e "$HOME/.local/share/kpdk/toolchains/2026.1/bin/easypdkprog"
           cargo run -- doctor
           cargo run -- new smoke --device PFS154
@@ -95,6 +97,21 @@ jobs:
           if (Test-Path $legacy) {
             throw "easypdkprog must remain outside the SDK: $legacy"
           }
+
+      - name: Validate installed examples (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $examples = Join-Path $env:LOCALAPPDATA "kpdk/toolchains/2026.1/examples"
+          if (-not (Test-Path "$examples/index.toml") -or -not (Test-Path "$examples/upstream/BlinkLED/main.c")) {
+            throw "missing installed free-pdk examples"
+          }
+
+      - name: Validate installed examples (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          test -f "$HOME/.local/share/kpdk/toolchains/2026.1/examples/index.toml"
+          test -f "$HOME/.local/share/kpdk/toolchains/2026.1/examples/upstream/BlinkLED/main.c"
 
       - name: Ensure programmer is not copied into SDK (Linux)
         if: runner.os == 'Linux'

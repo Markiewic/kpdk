@@ -91,6 +91,24 @@ Run `kpdk vscode` after changing the MCU, clock, VDD, SDK location, or editor co
 - Run `kpdk build` after every firmware change and report any remaining warnings.
 - Do not edit generated files in `build/` or `compile_commands.json` by hand.
 
+## Reference implementations
+
+Before writing peripheral code, inspect the pinned `free-pdk-examples` snapshot
+installed with the SDK. Start with `examples/index.toml`, then read the relevant
+example under `examples/upstream/`:
+
+- Windows: `%LOCALAPPDATA%\\kpdk\\toolchains\\2026.1\\examples`
+- Linux/macOS: `$HOME/.local/share/kpdk/toolchains/2026.1/examples`
+- Custom SDK: `$KPDK_SDK_DIR/examples`
+
+Use these examples as references for GPIO, clocks, timers, interrupts, PWM,
+sleep, and software serial. They are upstream examples, not project templates:
+adapt them to the exact target MCU and current SDK headers. Never assume that an
+example's registers, peripherals, pins, clock, voltage, or polarity are valid for
+this project. Build the adapted code with `kpdk build`.
+
+Upstream source: https://github.com/free-pdk/free-pdk-examples
+
 ## Hardware safety
 
 - A successful build verifies compilation only; it does not prove behavior on physical hardware.
@@ -250,6 +268,8 @@ mod tests {
         assert!(agents.contains("Clock: `8000000 Hz`"));
         assert!(agents.contains("Target VDD: `5000 mV`"));
         assert!(agents.contains("kpdk build --release"));
+        assert!(agents.contains("examples/index.toml"));
+        assert!(agents.contains("free-pdk-examples"));
         assert!(agents.contains("Never run `kpdk flash`"));
         assert!(agents.contains("OTP device"));
         let main_c = fs::read_to_string(temp.path().join("firmware/src/main.c")).unwrap();

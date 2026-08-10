@@ -1,3 +1,4 @@
+mod examples;
 mod includes;
 mod linux;
 mod platform;
@@ -24,11 +25,15 @@ pub fn run(force: bool) -> Result<()> {
     })?;
     let sdcc_root = sdk_root.join("sdcc");
     let include_root = sdk_root.join("include");
+    let examples_root = sdk_root.join("examples");
     let sdcc_exe = executable(&sdcc_root.join("bin"), "sdcc");
 
     remove_legacy_programmer(&sdk_root)?;
 
     if sdcc_exe.is_file() && includes::verify(&include_root).is_ok() && !force {
+        if examples::verify(&examples_root).is_err() {
+            install_examples_only(&sdk_root, &examples_root)?;
+        }
         write_manifest(&sdk_root, installer.as_ref())?;
         println!(
             "SDK {SDK_VERSION} is already installed at {}",
@@ -48,8 +53,10 @@ pub fn run(force: bool) -> Result<()> {
     recreate_directory(&workspace)?;
     let sdcc_staging = sdk_root.join(format!(".sdcc-staging-{process_id}"));
     let include_staging = sdk_root.join(format!(".include-staging-{process_id}"));
+    let examples_staging = sdk_root.join(format!(".examples-staging-{process_id}"));
     recreate_directory(&sdcc_staging)?;
     recreate_directory(&include_staging)?;
+    recreate_directory(&examples_staging)?;
 
     let install_result = installer
         .install(&workspace, &sdcc_staging)
@@ -59,22 +66,42 @@ pub fn run(force: bool) -> Result<()> {
                 distribution.version,
             )
         })
-        .and_then(|_| includes::install(&workspace, &include_staging));
+        .and_then(|_| includes::install(&workspace, &include_staging))
+        .and_then(|_| examples::install(&workspace, &examples_staging));
     let _ = fs::remove_dir_all(&workspace);
     if install_result.is_err() {
         let _ = fs::remove_dir_all(&sdcc_staging);
         let _ = fs::remove_dir_all(&include_staging);
+        let _ = fs::remove_dir_all(&examples_staging);
     }
     install_result?;
 
     replace_directory(&sdcc_staging, &sdcc_root)?;
     replace_directory(&include_staging, &include_root)?;
+    replace_directory(&examples_staging, &examples_root)?;
 
     verify_sdcc(&sdcc_exe, distribution.version)?;
     includes::verify(&include_root)?;
+    examples::verify(&examples_root)?;
     write_manifest(&sdk_root, installer.as_ref())?;
     println!("Installed kpdk SDK {SDK_VERSION} at {}", sdk_root.display());
     Ok(())
+}
+
+fn install_examples_only(sdk_root: &Path, examples_root: &Path) -> Result<()> {
+    let process_id = std::process::id();
+    let workspace = std::env::temp_dir().join(format!("kpdk-sdk-examples-{process_id}"));
+    let staging = sdk_root.join(format!(".examples-staging-{process_id}"));
+    recreate_directory(&workspace)?;
+    recreate_directory(&staging)?;
+
+    let result = examples::install(&workspace, &staging);
+    let _ = fs::remove_dir_all(&workspace);
+    if let Err(error) = result {
+        let _ = fs::remove_dir_all(&staging);
+        return Err(error);
+    }
+    replace_directory(&staging, examples_root)
 }
 
 fn remove_legacy_programmer(root: &Path) -> Result<()> {
@@ -216,6 +243,7 @@ fn write_manifest(root: &Path, installer: &dyn Installer) -> Result<()> {
     }
     installer.append_manifest(&mut contents);
     includes::append_manifest(&mut contents);
+    examples::append_manifest(&mut contents);
     fs::write(&path, contents).map_err(|source| Error::Write { path, source })
 }
 
