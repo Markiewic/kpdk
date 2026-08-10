@@ -90,6 +90,8 @@ Run `kpdk vscode` after changing the MCU, clock, VDD, SDK location, or editor co
 - Keep hardware-specific assumptions visible in code comments and task summaries.
 - Run `kpdk build` after every firmware change and report any remaining warnings.
 - Do not edit generated files in `build/` or `compile_commands.json` by hand.
+- For a single inline assembly instruction, prefer the SDCC expression form, for example `__asm("nop");`, so VS Code IntelliSense does not misparse the block.
+- Use SDCC block assembly (`__asm` ... `__endasm;`) only for multi-instruction sequences, labels, or branches.
 
 ## Reference implementations
 
@@ -270,6 +272,8 @@ mod tests {
         assert!(agents.contains("kpdk build --release"));
         assert!(agents.contains("examples/index.toml"));
         assert!(agents.contains("free-pdk-examples"));
+        assert!(agents.contains(r#"__asm("nop");"#));
+        assert!(agents.contains("multi-instruction sequences"));
         assert!(agents.contains("Never run `kpdk flash`"));
         assert!(agents.contains("OTP device"));
         let main_c = fs::read_to_string(temp.path().join("firmware/src/main.c")).unwrap();
