@@ -31,7 +31,11 @@ irm https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/install-kpdk.p
 
 The default installation directories are `~/.local/bin` on Linux and
 `%LOCALAPPDATA%\Programs\kpdk\bin` on Windows. Set `KPDK_INSTALL_DIR`
-before running the installer to choose another directory.
+before running the installer to choose another directory. After installing the
+CLI, the script offers to install the SDK immediately. Accepting the default
+answer (`Y`) leaves the machine ready to create and build projects. In a
+non-interactive environment the installer skips this prompt; run
+`kpdk sdk install` separately before the first build.
 
 For a manual installation, extract the entire release archive into a directory
 already present in `PATH`. Do not copy only the `kpdk` executable:
@@ -40,7 +44,6 @@ already present in `PATH`. Do not copy only the `kpdk` executable:
 ## Quick start
 
 ```bash
-kpdk sdk install
 kpdk new blink --device PFS154
 cd blink
 kpdk doctor

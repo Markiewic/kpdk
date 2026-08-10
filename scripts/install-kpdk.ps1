@@ -60,7 +60,18 @@ try {
     & $Programmer --version
     Write-Host "Installed kpdk and easypdkprog in $InstallDir"
     Write-Host "The directory was added to your user PATH."
-    Write-Host "Next: kpdk sdk install"
+    if ([Environment]::UserInteractive -and -not [Console]::IsInputRedirected) {
+        $InstallSdkAnswer = Read-Host "The SDK is required to build Padauk projects. Install it now? [Y/n]"
+        if ([string]::IsNullOrWhiteSpace($InstallSdkAnswer) -or $InstallSdkAnswer -match "^(?i:y|yes)$") {
+            & $Kpdk sdk install
+        }
+        else {
+            Write-Host "SDK installation skipped. Install it before your first build with: kpdk sdk install"
+        }
+    }
+    else {
+        Write-Host "No interactive console detected. Install the SDK before your first build with: kpdk sdk install"
+    }
 }
 finally {
     if (Test-Path $WorkDir) {
