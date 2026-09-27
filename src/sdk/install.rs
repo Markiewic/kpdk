@@ -4,11 +4,13 @@ mod linux;
 mod platform;
 mod windows;
 
+use flate2::read::GzDecoder;
 use sha2::{Digest, Sha256};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use tar::Archive;
 
 use crate::error::{Error, Result};
 use crate::toolchain::default_sdk_root;
@@ -192,6 +194,20 @@ fn download_checked(url: &str, destination: &Path, expected_sha256: &str) -> Res
         )));
     }
     Ok(())
+}
+
+fn extract_tar_gz(archive_path: &Path, destination: &Path) -> Result<()> {
+    let file = File::open(archive_path).map_err(|source| Error::Read {
+        path: archive_path.to_owned(),
+        source,
+    })?;
+    let decoder = GzDecoder::new(file);
+    let mut archive = Archive::new(decoder);
+    archive.set_preserve_ownerships(false);
+    archive.unpack(destination).map_err(|source| Error::Read {
+        path: archive_path.to_owned(),
+        source,
+    })
 }
 
 fn require_sdcc(root: &Path) -> Result<()> {

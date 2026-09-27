@@ -1,18 +1,16 @@
-use bzip2::read::BzDecoder;
-use std::fs::{self, File};
-use std::path::{Path, PathBuf};
-use tar::Archive;
+use std::path::Path;
 
-use crate::error::{Error, Result};
+use crate::error::Result;
 
 use super::platform::{Distribution, Installer};
-use super::{download_checked, executable, require_sdcc};
+use super::{download_checked, extract_tar_gz, require_sdcc};
 
 const X64_SDCC_URL: &str =
-    "https://sourceforge.net/projects/sdcc/files/sdcc-linux-amd64/4.6.0/sdcc-4.6.0-amd64-unknown-linux2.5.tar.bz2/download";
-const X64_SDCC_SHA256: &str = "f6b929c62ed3082a26087885e0f1f9bf41878602ef1f57e40b11b4a01bf4f366";
-const ARM64_SDCC_URL: &str = "https://sourceforge.net/projects/sdcc/files/snapshot_builds/aarch64-linux-gnu/sdcc-snapshot-aarch64-linux-gnu-20260927-16925-alecto.tar.bz2/download";
-const ARM64_SDCC_SHA256: &str = "3b19f2f35e034282ba20236acc6452b094bacb1ed6f20ce6fc766a7b39ebfb48";
+    "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.0-linux-x64.tar.gz";
+const X64_SDCC_SHA256: &str = "b007aa20d409411e5c4df75cbbc2350e14f59889e78c2404c7089014b771649b";
+const ARM64_SDCC_URL: &str =
+    "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.3-r16925-linux-arm64.tar.gz";
+const ARM64_SDCC_SHA256: &str = "142431edddca1ab3d81a8c03178fe19a5e87e6ca4e8d70fc7b98548b0700a9c1";
 
 pub(super) struct LinuxInstaller {
     distribution: Distribution,
@@ -24,7 +22,7 @@ impl LinuxInstaller {
             distribution: Distribution {
                 platform: "linux-x64",
                 version: "4.6.0",
-                channel: "stable",
+                channel: "kpdk-toolchain",
                 revision: None,
                 url: X64_SDCC_URL,
                 sha256: X64_SDCC_SHA256,
@@ -37,7 +35,7 @@ impl LinuxInstaller {
             distribution: Distribution {
                 platform: "linux-arm64",
                 version: "4.6.3",
-                channel: "snapshot",
+                channel: "kpdk-toolchain",
                 revision: Some(16925),
                 url: ARM64_SDCC_URL,
                 sha256: ARM64_SDCC_SHA256,
@@ -52,7 +50,7 @@ impl Installer for LinuxInstaller {
     }
 
     fn install(&self, workspace: &Path, staging: &Path) -> Result<()> {
-        let archive_path = workspace.join("sdcc.tar.bz2");
+        let archive_path = workspace.join("sdcc.tar.gz");
         println!(
             "Downloading SDCC {} ({})...",
             self.distribution.version, self.distribution.channel
@@ -63,71 +61,7 @@ impl Installer for LinuxInstaller {
             self.distribution.sha256,
         )?;
         println!("Extracting relocatable SDCC into {}...", staging.display());
-
-        let file = File::open(&archive_path).map_err(|source| Error::Read {
-            path: archive_path.clone(),
-            source,
-        })?;
-        let decoder = BzDecoder::new(file);
-        let mut archive = Archive::new(decoder);
-        archive.set_preserve_ownerships(false);
-        archive.unpack(staging).map_err(|source| Error::Read {
-            path: archive_path,
-            source,
-        })?;
-
-        flatten_archive_root(staging)?;
+        extract_tar_gz(&archive_path, staging)?;
         require_sdcc(staging)
     }
-}
-
-fn flatten_archive_root(staging: &Path) -> Result<()> {
-    if executable(&staging.join("bin"), "sdcc").is_file() {
-        return Ok(());
-    }
-
-    let entries = fs::read_dir(staging)
-        .map_err(|source| Error::Read {
-            path: staging.to_owned(),
-            source,
-        })?
-        .collect::<std::io::Result<Vec<_>>>()
-        .map_err(|source| Error::Read {
-            path: staging.to_owned(),
-            source,
-        })?;
-    let roots: Vec<PathBuf> = entries
-        .iter()
-        .map(|entry| entry.path())
-        .filter(|path| path.is_dir() && executable(&path.join("bin"), "sdcc").is_file())
-        .collect();
-
-    if roots.len() != 1 {
-        return Err(Error::Message(
-            "SDCC archive does not contain a single recognizable toolchain root".into(),
-        ));
-    }
-
-    let root = &roots[0];
-    let children = fs::read_dir(root)
-        .map_err(|source| Error::Read {
-            path: root.clone(),
-            source,
-        })?
-        .collect::<std::io::Result<Vec<_>>>()
-        .map_err(|source| Error::Read {
-            path: root.clone(),
-            source,
-        })?;
-    for child in children {
-        let destination = staging.join(child.file_name());
-        fs::rename(child.path(), &destination).map_err(|source| Error::Write {
-            path: destination,
-            source,
-        })?;
-    }
-    fs::remove_dir(root).map_err(|source| Error::Write {
-        path: root.clone(),
-        source,
-    })
 }
