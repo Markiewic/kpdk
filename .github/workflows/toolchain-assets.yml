@@ -24,7 +24,10 @@ jobs:
       - name: Download and verify the official SDCC installer
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri $env:SDCC_URL -OutFile sdcc-setup.exe
+          curl.exe --fail --location --retry 3 --output sdcc-setup.exe $env:SDCC_URL
+          if ($LASTEXITCODE -ne 0) {
+            throw "curl failed to download the official SDCC installer"
+          }
           $actual = (Get-FileHash -Algorithm SHA256 sdcc-setup.exe).Hash.ToLowerInvariant()
           if ($actual -ne $env:SDCC_SHA256) {
             throw "SDCC SHA-256 mismatch: expected $env:SDCC_SHA256, got $actual"
