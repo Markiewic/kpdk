@@ -29,6 +29,11 @@ Windows x64 PowerShell:
 irm https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/install-kpdk.ps1 | iex
 ```
 
+Windows 7 support is experimental and requires Windows 7 SP1 x64, PowerShell
+5.1, .NET Framework 4.8, and current root certificates. The installer enables
+TLS 1.2 and automatically selects the dedicated `kpdk-windows7-x64.zip`
+release. Windows 10 and newer continue to use the regular Windows archive.
+
 The default installation directories are `~/.local/bin` on Linux and
 `%LOCALAPPDATA%\Programs\kpdk\bin` on Windows. Set `KPDK_INSTALL_DIR`
 before running the installer to choose another directory. After installing the
@@ -238,7 +243,8 @@ cargo test
 
 The CI integration test installs the complete SDK, verifies it with
 `kpdk doctor`, creates a fresh PFS154 project, and compiles it on Windows x64,
-Linux x64, and Linux ARM64.
+Linux x64, and Linux ARM64. CI also compiles a dedicated Windows 7 SP1 x64
+binary; runtime verification still requires a real Windows 7 machine or VM.
 
 ## Roadmap
 

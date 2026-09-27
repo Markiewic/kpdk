@@ -15,6 +15,9 @@ jobs:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             archive: kpdk-windows-x64.zip
+          - os: windows-latest
+            target: x86_64-win7-windows-msvc
+            archive: kpdk-windows7-x64.zip
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             archive: kpdk-linux-x64.tar.gz
@@ -27,10 +30,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install stable Rust
+        if: matrix.target != 'x86_64-win7-windows-msvc'
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
-      - run: cargo build --release --target ${{ matrix.target }}
+      - name: Install nightly Rust for Windows 7
+        if: matrix.target == 'x86_64-win7-windows-msvc'
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - name: Build
+        if: matrix.target != 'x86_64-win7-windows-msvc'
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Build for Windows 7
+        if: matrix.target == 'x86_64-win7-windows-msvc'
+        run: cargo +nightly build -Z build-std --release --target ${{ matrix.target }}
       - name: Prepare Easy PDK Programmer (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
