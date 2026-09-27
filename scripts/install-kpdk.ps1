@@ -9,6 +9,9 @@ if ($PSVersionTable.PSVersion -lt [Version]"5.1") {
 }
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+if (-not [Environment]::Is64BitOperatingSystem) {
+    throw "kpdk currently supports only 64-bit Windows."
+}
 $WindowsVersion = [Environment]::OSVersion.Version
 if ($WindowsVersion.Major -eq 6 -and $WindowsVersion.Minor -eq 1 -and $WindowsVersion.Build -lt 7601) {
     throw "kpdk requires Windows 7 Service Pack 1."
