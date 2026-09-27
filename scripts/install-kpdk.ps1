@@ -4,6 +4,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($PSVersionTable.PSVersion -lt [Version]"5.1") {
+    throw "kpdk installation requires PowerShell 5.1 or newer. Install Windows Management Framework 5.1 and retry."
+}
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+$WindowsVersion = [Environment]::OSVersion.Version
+if ($WindowsVersion.Major -eq 6 -and $WindowsVersion.Minor -eq 1 -and $WindowsVersion.Build -lt 7601) {
+    throw "kpdk requires Windows 7 Service Pack 1."
+}
+$UseWindows7Build = $WindowsVersion.Major -lt 10
+
 $Repository = "Markiewic/kpdk"
 $InstallDir = if ($env:KPDK_INSTALL_DIR) {
     $env:KPDK_INSTALL_DIR
@@ -11,7 +22,7 @@ $InstallDir = if ($env:KPDK_INSTALL_DIR) {
 else {
     Join-Path $env:LOCALAPPDATA "Programs/kpdk/bin"
 }
-$ArchiveName = "kpdk-windows-x64.zip"
+$ArchiveName = if ($UseWindows7Build) { "kpdk-windows7-x64.zip" } else { "kpdk-windows-x64.zip" }
 $BaseUrl = if ($Version -eq "latest") {
     "https://github.com/$Repository/releases/latest/download"
 }
