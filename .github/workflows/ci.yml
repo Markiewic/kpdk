@@ -136,6 +136,25 @@ jobs:
             throw "VS Code includePath does not point at the installed kpdk SDK"
           }
 
+
+  windows7-build:
+    name: Build for Windows 7 x64
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-win7-windows-msvc
+      - run: cargo build --release --target x86_64-win7-windows-msvc
+      - name: Verify Windows 7 executable
+        shell: pwsh
+        run: |
+          $binary = "target/x86_64-win7-windows-msvc/release/kpdk.exe"
+          if (-not (Test-Path -PathType Leaf $binary)) {
+            throw "missing Windows 7 binary: $binary"
+          }
+
   macos-test:
     name: Test (macos-latest)
     runs-on: macos-latest
