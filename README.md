@@ -41,6 +41,24 @@ For a manual installation, extract the entire release archive into a directory
 already present in `PATH`. Do not copy only the `kpdk` executable:
 `easypdkprog` and its license are required parts of the distribution.
 
+### Uninstall
+
+Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/uninstall-kpdk.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Markiewic/kpdk/main/scripts/uninstall-kpdk.ps1 | iex
+```
+
+The uninstaller asks for confirmation, then removes the kpdk CLI bundle and all
+locally installed kpdk SDK data. Use `--yes` on Linux or `-Yes` in PowerShell
+for a non-interactive uninstall.
+
 ## Quick start
 
 ```bash
@@ -50,6 +68,10 @@ kpdk doctor
 kpdk build --release
 kpdk flash
 ```
+
+`kpdk build` offers to install a missing SDK before compiling. Pass
+`--yes` to install it automatically without prompting; non-interactive builds
+must use `--yes` or run `kpdk sdk install` beforehand.
 
 `kpdk sdk install` installs a relocatable SDCC toolchain, `pdk-includes`,
 `easy-pdk-includes`, and a pinned reference snapshot of `free-pdk-examples`
@@ -140,7 +162,7 @@ the current project.
 ```text
 kpdk sdk install [--force]
 kpdk new <name> --device <device>
-kpdk build [--release]
+kpdk build [--release] [--yes]
 kpdk clean
 kpdk doctor
 kpdk mcp
