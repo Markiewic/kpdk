@@ -15,11 +15,7 @@ impl Toolchain {
     pub fn discover() -> Self {
         let easypdkprog = programmer_executable();
 
-        if let Some(root) = env::var_os("KPDK_SDK_DIR")
-            .map(PathBuf::from)
-            .or_else(default_sdk_root)
-            .filter(|root| root.is_dir())
-        {
+        if let Some(root) = configured_sdk_root().filter(|root| root.is_dir()) {
             let sdcc_bin = root.join("sdcc").join("bin");
             return Self {
                 sdcc: executable(&sdcc_bin, "sdcc"),
@@ -59,6 +55,22 @@ fn programmer_executable() -> String {
 
 pub fn default_sdk_root() -> Option<PathBuf> {
     dirs::data_local_dir().map(|root| root.join("kpdk").join("toolchains").join(TOOLCHAIN_VERSION))
+}
+
+fn configured_sdk_root() -> Option<PathBuf> {
+    env::var_os("KPDK_SDK_DIR")
+        .map(PathBuf::from)
+        .or_else(default_sdk_root)
+}
+
+pub fn sdk_is_installed() -> bool {
+    configured_sdk_root().is_some_and(|root| {
+        let bin = root.join("sdcc").join("bin");
+        Path::new(&executable(&bin, "sdcc")).is_file()
+            && Path::new(&executable(&bin, "makebin")).is_file()
+            && root.join("include/pdk/device.h").is_file()
+            && root.join("include/easy-pdk/calibrate.h").is_file()
+    })
 }
 
 fn executable(directory: &Path, name: &str) -> String {
