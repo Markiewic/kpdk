@@ -36,7 +36,7 @@ impl LinuxInstaller {
         Self {
             distribution: Distribution {
                 platform: "linux-arm64",
-                version: "4.6.2",
+                version: "4.6.3",
                 channel: "snapshot",
                 revision: Some(16925),
                 url: ARM64_SDCC_URL,
