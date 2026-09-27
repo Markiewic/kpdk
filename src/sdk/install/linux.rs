@@ -5,9 +5,11 @@ use crate::error::Result;
 use super::platform::{Distribution, Installer};
 use super::{download_checked, extract_tar_gz, require_sdcc};
 
-const X64_SDCC_URL: &str = "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.0-linux-x64.tar.gz";
+const X64_SDCC_URL: &str =
+    "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.0-linux-x64.tar.gz";
 const X64_SDCC_SHA256: &str = "b007aa20d409411e5c4df75cbbc2350e14f59889e78c2404c7089014b771649b";
-const ARM64_SDCC_URL: &str = "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.3-r16925-linux-arm64.tar.gz";
+const ARM64_SDCC_URL: &str =
+    "https://github.com/Markiewic/kpdk/releases/download/kpdk-toolchain-2026.1/sdcc-4.6.3-r16925-linux-arm64.tar.gz";
 const ARM64_SDCC_SHA256: &str = "142431edddca1ab3d81a8c03178fe19a5e87e6ca4e8d70fc7b98548b0700a9c1";
 
 pub(super) struct LinuxInstaller {
