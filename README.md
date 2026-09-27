@@ -149,8 +149,6 @@ kpdk flash [--port COM5]
 kpdk vscode [--project <path>]
 ```
 
-`kpdk flash` asks for explicit confirmation before writing an OTP `PMS` device.
-
 ## MCP
 
 `kpdk mcp` runs a local Model Context Protocol server over stdio. MCP clients can
@@ -175,8 +173,8 @@ The initial server exposes two tools:
   `kpdk build` and returns structured IHX/BIN paths, compiler diagnostics, and
   errors without writing non-protocol data to stdout.
 
-Flashing is intentionally not exposed through MCP. Programming an OTP device
-remains an explicit CLI action.
+Flashing is intentionally not exposed through MCP. Programming remains an
+explicit CLI action.
 
 ## VS Code
 
