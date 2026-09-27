@@ -45,10 +45,6 @@ pub fn architecture(device: &str) -> Result<Architecture> {
         })
 }
 
-pub fn is_otp(device: &str) -> bool {
-    device.to_ascii_uppercase().starts_with("PMS")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

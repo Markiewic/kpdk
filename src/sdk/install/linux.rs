@@ -11,8 +11,8 @@ use super::{download_checked, executable, require_sdcc};
 const X64_SDCC_URL: &str =
     "https://sourceforge.net/projects/sdcc/files/sdcc-linux-amd64/4.6.0/sdcc-4.6.0-amd64-unknown-linux2.5.tar.bz2/download";
 const X64_SDCC_SHA256: &str = "f6b929c62ed3082a26087885e0f1f9bf41878602ef1f57e40b11b4a01bf4f366";
-const ARM64_SDCC_URL: &str = "https://sourceforge.net/projects/sdcc/files/snapshot_builds/aarch64-linux-gnu/sdcc-snapshot-aarch64-linux-gnu-20260728-16725.tar.bz2/download";
-const ARM64_SDCC_SHA256: &str = "0cc1c7460007653efda17ccc479139fba0a2ae8f15f5d34553a4b377a336a85c";
+const ARM64_SDCC_URL: &str = "https://sourceforge.net/projects/sdcc/files/snapshot_builds/aarch64-linux-gnu/sdcc-snapshot-aarch64-linux-gnu-20260927-16925-alecto.tar.bz2/download";
+const ARM64_SDCC_SHA256: &str = "3b19f2f35e034282ba20236acc6452b094bacb1ed6f20ce6fc766a7b39ebfb48";
 
 pub(super) struct LinuxInstaller {
     distribution: Distribution,
@@ -36,9 +36,9 @@ impl LinuxInstaller {
         Self {
             distribution: Distribution {
                 platform: "linux-arm64",
-                version: "4.6.2",
+                version: "4.6.3",
                 channel: "snapshot",
-                revision: Some(16725),
+                revision: Some(16925),
                 url: ARM64_SDCC_URL,
                 sha256: ARM64_SDCC_SHA256,
             },

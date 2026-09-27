@@ -62,7 +62,7 @@ packages are pinned to exact upstream Git commits and recorded in
   7-Zip bootstrap. The installers are extracted without running them, requiring
   administrator rights, or changing the registry.
 - Linux x64 uses the official stable SDCC 4.6.0 binary archive.
-- Linux ARM64 uses the pinned official SDCC 4.6.2 snapshot, revision 16725,
+- Linux ARM64 uses the pinned official SDCC 4.6.3 snapshot, revision 16925,
   because SDCC does not currently publish a stable ARM64 binary archive.
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
@@ -149,8 +149,6 @@ kpdk flash [--port COM5]
 kpdk vscode [--project <path>]
 ```
 
-`kpdk flash` asks for explicit confirmation before writing an OTP `PMS` device.
-
 ## MCP
 
 `kpdk mcp` runs a local Model Context Protocol server over stdio. MCP clients can
@@ -175,8 +173,8 @@ The initial server exposes two tools:
   `kpdk build` and returns structured IHX/BIN paths, compiler diagnostics, and
   errors without writing non-protocol data to stdout.
 
-Flashing is intentionally not exposed through MCP. Programming an OTP device
-remains an explicit CLI action.
+Flashing is intentionally not exposed through MCP. Programming remains an
+explicit CLI action.
 
 ## VS Code
 

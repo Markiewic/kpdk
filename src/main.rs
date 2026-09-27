@@ -62,8 +62,6 @@ enum Command {
         project: PathBuf,
         #[arg(long)]
         port: Option<String>,
-        #[arg(long)]
-        yes: bool,
     },
     /// Generate or refresh VS Code project integration.
     Vscode {
@@ -97,7 +95,7 @@ fn run() -> Result<()> {
         Command::Doctor => doctor::run(),
         Command::Mcp => mcp::run(),
         Command::Probe => probe::run(),
-        Command::Flash { project, port, yes } => flash::run(&project, port.as_deref(), yes),
+        Command::Flash { project, port } => flash::run(&project, port.as_deref()),
         Command::Vscode { project } => vscode::run(&project),
     }
 }
