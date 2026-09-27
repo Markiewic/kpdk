@@ -8,10 +8,11 @@ mod sdk;
 mod toolchain;
 
 use clap::{Parser, Subcommand};
+use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 
 use crate::commands::{build, clean, doctor, flash, new, probe, vscode};
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::sdk::install;
 
 #[derive(Parser)]
@@ -44,6 +45,9 @@ enum Command {
         project: PathBuf,
         #[arg(long)]
         release: bool,
+        /// Install a missing SDK without prompting.
+        #[arg(long)]
+        yes: bool,
     },
     /// Remove generated build artifacts.
     Clean {
@@ -90,13 +94,50 @@ fn run() -> Result<()> {
             clock,
             vdd,
         } => new::run(&name, &device, clock, vdd),
-        Command::Build { project, release } => build::run(&project, release).map(|_| ()),
+        Command::Build {
+            project,
+            release,
+            yes,
+        } => {
+            ensure_sdk(yes)?;
+            build::run(&project, release).map(|_| ())
+        }
         Command::Clean { project } => clean::run(&project),
         Command::Doctor => doctor::run(),
         Command::Mcp => mcp::run(),
         Command::Probe => probe::run(),
         Command::Flash { project, port } => flash::run(&project, port.as_deref()),
         Command::Vscode { project } => vscode::run(&project),
+    }
+}
+
+fn ensure_sdk(yes: bool) -> Result<()> {
+    if crate::toolchain::sdk_is_installed() {
+        return Ok(());
+    }
+    if yes {
+        return install::run(false);
+    }
+    if !io::stdin().is_terminal() {
+        return Err(Error::Message(
+            "the kpdk SDK is not installed; run `kpdk sdk install` or retry with `kpdk build --yes`".into(),
+        ));
+    }
+
+    print!("The kpdk SDK is required to build this project. Install it now? [Y/n] ");
+    io::stdout()
+        .flush()
+        .map_err(|error| Error::Message(error.to_string()))?;
+    let mut answer = String::new();
+    io::stdin()
+        .read_line(&mut answer)
+        .map_err(|error| Error::Message(error.to_string()))?;
+
+    match answer.trim().to_ascii_lowercase().as_str() {
+        "" | "y" | "yes" => install::run(false),
+        _ => Err(Error::Message(
+            "SDK installation skipped; run `kpdk sdk install` before building".into(),
+        )),
     }
 }
 
