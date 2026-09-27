@@ -136,17 +136,16 @@ jobs:
             throw "VS Code includePath does not point at the installed kpdk SDK"
           }
 
-
   windows7-build:
     name: Build for Windows 7 x64
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          targets: x86_64-win7-windows-msvc
-      - run: cargo build --release --target x86_64-win7-windows-msvc
+          components: rust-src
+      - run: cargo +nightly build -Z build-std --release --target x86_64-win7-windows-msvc
       - name: Verify Windows 7 executable
         shell: pwsh
         run: |
