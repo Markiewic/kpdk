@@ -62,7 +62,7 @@ packages are pinned to exact upstream Git commits and recorded in
   7-Zip bootstrap. The installers are extracted without running them, requiring
   administrator rights, or changing the registry.
 - Linux x64 uses the official stable SDCC 4.6.0 binary archive.
-- Linux ARM64 uses the pinned official SDCC 4.6.2 snapshot, revision 16925,
+- Linux ARM64 uses the pinned official SDCC 4.6.3 snapshot, revision 16925,
   because SDCC does not currently publish a stable ARM64 binary archive.
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
