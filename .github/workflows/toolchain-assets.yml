@@ -6,12 +6,14 @@ on:
 permissions:
   contents: write
 
+env:
+  RELEASE_TAG: kpdk-toolchain-2026.1
+
 jobs:
   windows-sdcc:
-    name: Package Windows SDCC
+    name: Package Windows x64 SDCC
     runs-on: windows-latest
     env:
-      RELEASE_TAG: kpdk-toolchain-2026.1
       SDCC_VERSION: 4.6.0
       SDCC_URL: https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.6.0/sdcc-4.6.0-x64-setup.exe/download
       SDCC_SHA256: 0a165e155a052fcf7c29ea703ee77d5a8eb578eba58279e79e885618dc4b2e1a
@@ -63,20 +65,99 @@ jobs:
           $hash = (Get-FileHash -Algorithm SHA256 $env:ASSET_NAME).Hash.ToLowerInvariant()
           "$hash  $env:ASSET_NAME" | Set-Content -NoNewline "$env:ASSET_NAME.sha256"
 
-      - name: Publish immutable toolchain asset
-        shell: pwsh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-sdcc
+          path: |
+            ${{ env.ASSET_NAME }}
+            ${{ env.ASSET_NAME }}.sha256
+          if-no-files-found: error
+
+  linux-sdcc:
+    name: Package ${{ matrix.platform }} SDCC
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux-x64
+            version: 4.6.0
+            revision: stable
+            source: https://sourceforge.net/projects/sdcc/files/sdcc-linux-amd64/4.6.0/sdcc-4.6.0-amd64-unknown-linux2.5.tar.bz2/download
+            sha256: f6b929c62ed3082a26087885e0f1f9bf41878602ef1f57e40b11b4a01bf4f366
+            asset: sdcc-4.6.0-linux-x64.tar.gz
+          - platform: linux-arm64
+            version: 4.6.3
+            revision: "16925"
+            source: https://sourceforge.net/projects/sdcc/files/snapshot_builds/aarch64-linux-gnu/sdcc-snapshot-aarch64-linux-gnu-20260927-16925-alecto.tar.bz2/download
+            sha256: 3b19f2f35e034282ba20236acc6452b094bacb1ed6f20ce6fc766a7b39ebfb48
+            asset: sdcc-4.6.3-r16925-linux-arm64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and verify the official SDCC archive
+        env:
+          SOURCE_URL: ${{ matrix.source }}
+          SOURCE_SHA256: ${{ matrix.sha256 }}
+        run: |
+          curl --fail --location --retry 3 --output sdcc.tar.bz2 "$SOURCE_URL"
+          echo "$SOURCE_SHA256  sdcc.tar.bz2" | sha256sum --check -
+
+      - name: Create the relocatable toolchain archive
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          VERSION: ${{ matrix.version }}
+          REVISION: ${{ matrix.revision }}
+          SOURCE_URL: ${{ matrix.source }}
+          SOURCE_SHA256: ${{ matrix.sha256 }}
+          ASSET_NAME: ${{ matrix.asset }}
+        run: |
+          mkdir extracted toolchain
+          tar -xjf sdcc.tar.bz2 -C extracted
+          root="$(find extracted -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -n "$root"
+          test -x "$root/bin/sdcc"
+          cp -a "$root"/. toolchain/
+          cat > toolchain/KPDK-TOOLCHAIN.toml <<EOF
+          source = "$SOURCE_URL"
+          source_sha256 = "$SOURCE_SHA256"
+          version = "$VERSION"
+          revision = "$REVISION"
+          platform = "$PLATFORM"
+          packaging = "Repacked from the official SDCC binary archive without modifying its contents."
+          upstream = "https://sdcc.sourceforge.net/"
+          source_code = "https://sourceforge.net/projects/sdcc/files/sdcc/4.6.0/"
+          EOF
+          tar -czf "$ASSET_NAME" -C toolchain .
+          sha256sum "$ASSET_NAME" > "$ASSET_NAME.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-sdcc
+          path: |
+            ${{ matrix.asset }}
+            ${{ matrix.asset }}.sha256
+          if-no-files-found: error
+
+  publish:
+    name: Publish immutable assets
+    needs: [windows-sdcc, linux-sdcc]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-sdcc"
+          path: assets
+          merge-multiple: true
+
+      - name: Create release and upload assets
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view $env:RELEASE_TAG *> $null
-          if ($LASTEXITCODE -ne 0) {
-            gh release create $env:RELEASE_TAG --target $env:GITHUB_SHA --title "kpdk toolchain 2026.1" --notes "Pinned, checksum-verified toolchain archives used by kpdk SDK 2026.1."
-            if ($LASTEXITCODE -ne 0) {
-              throw "failed to create release $env:RELEASE_TAG"
-            }
-          }
-
-          gh release upload $env:RELEASE_TAG $env:ASSET_NAME "$env:ASSET_NAME.sha256"
-          if ($LASTEXITCODE -ne 0) {
-            throw "failed to upload immutable toolchain assets; existing assets are not overwritten"
-          }
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "kpdk toolchain 2026.1" \
+              --notes "Pinned, checksum-verified SDCC toolchain archives used by kpdk SDK 2026.1."
+          fi
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" assets/*
