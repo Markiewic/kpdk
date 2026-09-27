@@ -58,12 +58,12 @@ Every downloaded file is verified against a pinned SHA-256 checksum. The header
 packages are pinned to exact upstream Git commits and recorded in
 `manifest.toml`.
 
-- Windows x64 uses the official SDCC 4.6.0 installer and a pinned portable
-  7-Zip bootstrap. The installers are extracted without running them, requiring
-  administrator rights, or changing the registry.
-- Linux x64 uses the official stable SDCC 4.6.0 binary archive.
-- Linux ARM64 uses the pinned official SDCC 4.6.3 snapshot, revision 16925,
-  because SDCC does not currently publish a stable ARM64 binary archive.
+- Windows x64 and Linux x64 use SDCC 4.6.0.
+- Linux ARM64 uses SDCC 4.6.3, revision 16925.
+- The SDCC distributions are checksum-verified, provenance-recorded snapshots
+  hosted in the immutable `kpdk-toolchain-2026.1` release. They were repacked
+  from the corresponding official upstream distributions and are installed
+  directly by `kpdk` without an external archive utility.
 - All platforms receive pinned snapshots of
   [pdk-includes](https://github.com/free-pdk/pdk-includes) and
   [easy-pdk-includes](https://github.com/free-pdk/easy-pdk-includes).
@@ -77,7 +77,7 @@ packages are pinned to exact upstream Git commits and recorded in
   Windows uses the official upstream release binary verified by SHA-256.
   `kpdk probe`, `kpdk flash`, and `kpdk doctor` use this copy directly.
 
-Archives are unpacked inside `kpdk`; no system `tar`, `bzip2`, `gzip`, `unzip`,
+Archives are unpacked inside `kpdk`; no system `tar`, `gzip`, `unzip`,
 package manager, C compiler, or administrator rights are required. The
 separately bundled `easypdkprog` executable remains licensed under GPL-3.0 by
 its upstream project.
