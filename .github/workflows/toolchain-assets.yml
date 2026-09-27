@@ -1,0 +1,82 @@
+name: Publish toolchain assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-sdcc:
+    name: Package Windows SDCC
+    runs-on: windows-latest
+    env:
+      RELEASE_TAG: kpdk-toolchain-2026.1
+      SDCC_VERSION: 4.6.0
+      SDCC_URL: https://sourceforge.net/projects/sdcc/files/sdcc-win64/4.6.0/sdcc-4.6.0-x64-setup.exe/download
+      SDCC_SHA256: 0a165e155a052fcf7c29ea703ee77d5a8eb578eba58279e79e885618dc4b2e1a
+      ASSET_NAME: sdcc-4.6.0-windows-x64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download and verify the official SDCC installer
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri $env:SDCC_URL -OutFile sdcc-setup.exe
+          $actual = (Get-FileHash -Algorithm SHA256 sdcc-setup.exe).Hash.ToLowerInvariant()
+          if ($actual -ne $env:SDCC_SHA256) {
+            throw "SDCC SHA-256 mismatch: expected $env:SDCC_SHA256, got $actual"
+          }
+
+      - name: Create the relocatable toolchain archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path toolchain | Out-Null
+          7z x -y "-o$PWD/toolchain" sdcc-setup.exe
+          if ($LASTEXITCODE -ne 0) {
+            throw "7-Zip failed to extract the SDCC installer"
+          }
+
+          if (-not (Test-Path toolchain/bin/sdcc.exe)) {
+            throw "the extracted SDCC installer does not contain bin/sdcc.exe"
+          }
+          if (-not (Test-Path toolchain/bin/cc1)) {
+            throw "the extracted SDCC installer does not contain bin/cc1"
+          }
+
+          Copy-Item toolchain/bin/cc1 toolchain/bin/cc1.exe
+          @"
+          source = "$env:SDCC_URL"
+          source_sha256 = "$env:SDCC_SHA256"
+          version = "$env:SDCC_VERSION"
+          platform = "windows-x64"
+          packaging = "Extracted from the official SDCC NSIS installer without executing it."
+          upstream = "https://sdcc.sourceforge.net/"
+          source_code = "https://sourceforge.net/projects/sdcc/files/sdcc/4.6.0/"
+          "@ | Set-Content -Encoding utf8 toolchain/KPDK-TOOLCHAIN.toml
+
+          tar -czf $env:ASSET_NAME -C toolchain .
+          if ($LASTEXITCODE -ne 0) {
+            throw "tar failed to create $env:ASSET_NAME"
+          }
+
+          $hash = (Get-FileHash -Algorithm SHA256 $env:ASSET_NAME).Hash.ToLowerInvariant()
+          "$hash  $env:ASSET_NAME" | Set-Content -NoNewline "$env:ASSET_NAME.sha256"
+
+      - name: Publish immutable toolchain asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:RELEASE_TAG *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:RELEASE_TAG --target $env:GITHUB_SHA --title "kpdk toolchain 2026.1" --notes "Pinned, checksum-verified toolchain archives used by kpdk SDK 2026.1."
+            if ($LASTEXITCODE -ne 0) {
+              throw "failed to create release $env:RELEASE_TAG"
+            }
+          }
+
+          gh release upload $env:RELEASE_TAG $env:ASSET_NAME "$env:ASSET_NAME.sha256"
+          if ($LASTEXITCODE -ne 0) {
+            throw "failed to upload immutable toolchain assets; existing assets are not overwritten"
+          }
